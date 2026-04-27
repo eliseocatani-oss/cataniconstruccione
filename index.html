@@ -290,6 +290,27 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
     </div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar →</button>
     <div class="login-err" id="login-err"></div>
+
+    <!-- Config Supabase -->
+    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+      <button onclick="toggleLoginCfg()" id="login-cfg-toggle"
+        style="background:none;border:none;color:var(--text3);font-size:10px;font-family:var(--mono);cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:1px;">
+        <span id="login-cfg-arrow">▶</span> CONFIGURAR CONEXIÓN
+      </button>
+      <div id="login-cfg-panel" style="display:none;margin-top:12px;">
+        <div class="login-field">
+          <label>Supabase URL</label>
+          <input type="text" id="login-sb-url" placeholder="https://xxx.supabase.co" oninput="saveCfgFromLogin()"/>
+        </div>
+        <div class="login-field" style="margin-bottom:0;">
+          <label>Anon Key</label>
+          <input type="password" id="login-sb-key" placeholder="eyJh..." oninput="saveCfgFromLogin()"/>
+        </div>
+        <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-top:8px;line-height:1.6;">
+          Encontrás estos datos en Supabase →<br>Settings → API → Legacy anon key
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -319,6 +340,7 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
     <div class="ni" onclick="tab('fcl',this)"><span class="ic">◎</span>FCL</div>
     <div class="ni" onclick="tab('liqfinal',this)"><span class="ic">◈</span>Liq. Final</div>
     <div class="ni" onclick="tab('pagos',this)"><span class="ic">◎</span>Pagos viernes</div>
+    <div class="ni" onclick="tab('asist-contador',this)"><span class="ic">⬡</span>Asist. Contador</div>
     <div class="nav-section">Análisis</div>
     <div class="ni" onclick="tab('rendimiento',this)"><span class="ic">◉</span>Rendimiento</div>
   </nav>
@@ -529,6 +551,10 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
     <div style="max-height:80vh;overflow-y:auto;">
       <div class="card" id="emp-form-card">
         <div class="card-title" id="emp-form-title">Nuevo empleado</div>
+        <div id="emp-historial" style="display:none;margin-bottom:14px;padding:10px 14px;background:var(--c2);border:1px solid var(--border);border-radius:var(--r);">
+          <div style="font-size:9px;color:var(--gold);font-family:var(--mono);letter-spacing:1.5px;font-weight:600;margin-bottom:8px;">HISTORIAL</div>
+          <div id="emp-historial-content" style="font-size:11px;color:var(--text2);font-family:var(--mono);line-height:1.8;"></div>
+        </div>
         <div class="grid2">
           <div class="f span2"><label>Nombre completo</label><input type="text" id="e-nom" placeholder="APELLIDO, Nombre"/></div>
           <div class="f"><label>Legajo</label><input type="number" id="e-leg"/></div>
@@ -550,6 +576,9 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
             <select id="e-activo"><option value="ACTIVO">ACTIVO</option><option value="BAJA">BAJA</option></select>
           </div>
           <div class="f"><label>Fecha alta</label><input type="date" id="e-alta"/></div>
+          <div class="f"><label>Fecha baja</label><input type="date" id="e-baja"/></div>
+          <div class="f"><label>Reingreso</label><input type="date" id="e-reingreso"/></div>
+          <div class="f"><label>2da baja</label><input type="date" id="e-segunda-baja"/></div>
           <div class="f"><label>Obra social</label><input type="text" id="e-os"/></div>
           <div class="f"><label>Cuenta Macro</label><input type="text" id="e-cuenta"/></div>
         </div>
@@ -798,6 +827,73 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
   </div>
 </div>
 
+<!-- ══ ASISTENCIA CONTADOR ══ -->
+<div id="panel-asist-contador" class="panel">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div><h1>Asistencia para contador</h1><p>// declarada para ARCA · sugerida desde asistencia real cargada</p></div>
+      <div class="breadcrumb">CATANI / <span>ASIST. CONTADOR</span></div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Configurar quincena</div>
+      <div class="row">
+        <div class="f" style="max-width:155px;"><label>Desde</label><input type="date" id="ac-desde"/></div>
+        <div class="f" style="max-width:155px;"><label>Hasta</label><input type="date" id="ac-hasta"/></div>
+        <div class="f" style="max-width:155px;"><label>Obra</label>
+          <select id="ac-obra">
+            <option value="">— elegir —</option>
+            <option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option><option>FUNES</option><option>PIÑERO</option>
+          </select>
+        </div>
+        <div class="f" style="max-width:170px;justify-content:flex-end;"><label>&nbsp;</label>
+          <button class="btn btn-nav" onclick="cargarAsistContador()">→ Cargar</button>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:-4px;">
+        Las horas sugeridas vienen de la asistencia real que cargaste. Ajustá lo que necesites antes de enviar al contador.
+      </div>
+    </div>
+
+    <div id="ac-main" style="display:none;">
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);">
+          <div class="card-title" style="margin:0;">Empleados del período</div>
+          <div style="display:flex;gap:12px;font-size:10px;font-family:var(--mono);color:var(--text3);">
+            <span>Total hs declaradas: <span id="ac-total-hs" style="color:var(--gold);">0</span></span>
+            <span>Total hs reales: <span id="ac-total-real" style="color:var(--ice);">0</span></span>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="tbl" id="ac-tabla">
+            <thead><tr>
+              <th>Empleado</th>
+              <th>Legajo</th>
+              <th>Categoría</th>
+              <th style="text-align:right;color:var(--ice);">Hs. reales</th>
+              <th style="text-align:right;color:var(--gold);">Hs. a declarar</th>
+              <th style="width:80px;text-align:center;">Lluvia</th>
+              <th style="width:80px;text-align:center;">Feriado</th>
+              <th style="width:80px;text-align:center;">Accidente</th>
+              <th style="width:80px;text-align:center;">Enfermedad</th>
+              <th style="width:120px;">Observación</th>
+            </tr></thead>
+            <tbody id="ac-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-gold" onclick="guardarAsistContador()">Guardar declaración</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetAsistContador()">Cancelar</button>
+        <div id="ac-st" class="st"></div>
+      </div>
+    </div>
+
+    <div id="ac-empty" class="empty"><div class="empty-icon">⬡</div><p>seleccioná período y obra para cargar</p></div>
+  </div>
+</div>
+
 <!-- ══ RENDIMIENTO ══ -->
 <div id="panel-rendimiento" class="panel">
   <div class="topbar">
@@ -861,6 +957,27 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+// ── Login config helpers ────────────────────────────────────
+function toggleLoginCfg(){
+  const panel = document.getElementById('login-cfg-panel');
+  const arrow = document.getElementById('login-cfg-arrow');
+  const open  = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  arrow.textContent   = open ? '▼' : '▶';
+}
+
+function saveCfgFromLogin(){
+  const url = document.getElementById('login-sb-url').value.trim();
+  const key = document.getElementById('login-sb-key').value.trim();
+  localStorage.setItem('catani_cfg', JSON.stringify({url, key}));
+  // Also update sidebar inputs
+  const su = document.getElementById('sb-url');
+  const sk = document.getElementById('sb-key');
+  if(su) su.value = url;
+  if(sk) sk.value = key;
+  _sbClient = null; // reset client
+}
+
 // ── Supabase Auth ──────────────────────────────────────────
 let _sbClient = null;
 function getSBClient(){
@@ -890,7 +1007,21 @@ async function doLogin(){
   btn.textContent='Ingresar →';btn.disabled=false;
 }
 
+function initLoginScreen(){
+  const cfg = JSON.parse(localStorage.getItem('catani_cfg')||'{}');
+  const urlEl = document.getElementById('login-sb-url');
+  const keyEl = document.getElementById('login-sb-key');
+  if(urlEl && cfg.url) urlEl.value = cfg.url;
+  if(keyEl && cfg.key) keyEl.value = cfg.key;
+  // Auto-expand config if not configured
+  if(!cfg.url || !cfg.key){
+    document.getElementById('login-cfg-panel').style.display = 'block';
+    document.getElementById('login-cfg-arrow').textContent   = '▼';
+  }
+}
+
 async function checkSession(){
+  initLoginScreen();
   const client = getSBClient();
   if(!client){showLogin();return;}
   try{
@@ -908,6 +1039,7 @@ function showApp(){
 function showLogin(){
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app-shell').style.display='none';
+  initLoginScreen();
 }
 async function logout(){
   try{const c=getSBClient();if(c)await c.auth.signOut();}catch(e){}
@@ -1255,7 +1387,18 @@ async function editarEmpleado(id){
     set('e-nom',e.nombre);set('e-leg',e.legajo);set('e-cuil',e.cuil);set('e-dni',e.dni);
     set('e-fnac',e.fecha_nac);set('e-dom',e.domicilio);set('e-loc',e.localidad);
     set('e-obra',e.obra);set('e-cat',e.categoria);set('e-activo',e.activo||'ACTIVO');
-    set('e-alta',e.alta);set('e-os',e.obra_social);set('e-cuenta',e.cuenta_macro);
+    set('e-alta',e.alta);set('e-baja',e.baja);set('e-reingreso',e.reingreso);set('e-segunda-baja',e.segunda_baja);
+    set('e-os',e.obra_social);set('e-cuenta',e.cuenta_macro);
+    // Show history
+    const hist = document.getElementById('emp-historial');
+    const histContent = document.getElementById('emp-historial-content');
+    const lines = [];
+    if(e.alta)         lines.push(`✅ Alta: ${e.alta}`);
+    if(e.baja)         lines.push(`🔴 Baja: ${e.baja}`);
+    if(e.reingreso)    lines.push(`✅ Reingreso: ${e.reingreso}`);
+    if(e.segunda_baja) lines.push(`🔴 2da Baja: ${e.segunda_baja}`);
+    if(lines.length){histContent.innerHTML=lines.join('<br>');hist.style.display='block';}
+    else{hist.style.display='none';}
     set('e-jorn',e.jornal);set('e-trans',e.transporte);set('e-hex',e.hextra);set('e-fer',e.feriado);
     document.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('selected'));
     document.querySelectorAll('.emp-card').forEach(c=>{if(c.onclick.toString().includes(id))c.classList.add('selected');});
@@ -1263,6 +1406,7 @@ async function editarEmpleado(id){
 }
 function nuevoEmpleado(){
   empEditId=null;document.getElementById('e-id').value='';
+  document.getElementById('emp-historial').style.display='none';
   document.getElementById('emp-form-title').textContent='Nuevo empleado';
   document.getElementById('e-btn-guardar').textContent='Dar de alta';
   limpiarEmp();
@@ -1281,6 +1425,9 @@ async function guardarEmpleado(){
     obra:document.getElementById('e-obra').value||null,
     categoria:document.getElementById('e-cat').value||null,
     alta:document.getElementById('e-alta').value||null,
+    baja:document.getElementById('e-baja').value||null,
+    reingreso:document.getElementById('e-reingreso').value||null,
+    segunda_baja:document.getElementById('e-segunda-baja').value||null,
     obra_social:document.getElementById('e-os').value.trim()||null,
     cuenta_macro:document.getElementById('e-cuenta').value.trim()||null,
     jornal:parseFloat(document.getElementById('e-jorn').value)||null,
@@ -1300,7 +1447,9 @@ function limpiarEmp(){
   ['e-obra','e-cat'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('e-activo').value='ACTIVO';
   document.getElementById('e-alta').value=today;
+  ['e-baja','e-reingreso','e-segunda-baja'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('e-id').value='';
+  document.getElementById('emp-historial').style.display='none';
 }
 
 // ── F931 ──────────────────────────────────────────────────
@@ -1552,6 +1701,135 @@ async function calcRendimiento(){
   btn.textContent='Calcular →';btn.disabled=false;
 }
 
+// ── ASISTENCIA CONTADOR ──────────────────────────────────────
+let acEmpleados = [];
+
+async function cargarAsistContador(){
+  const desde = document.getElementById('ac-desde').value;
+  const hasta = document.getElementById('ac-hasta').value;
+  const obra  = document.getElementById('ac-obra').value;
+  if(!desde || !hasta || !obra){alert('Completá período y obra.');return;}
+  const btn = event.target; btn.textContent='Cargando...'; btn.disabled=true;
+  try{
+    // Get empleados activos con legajo y categoria
+    const emps = await sbGet('empleados',
+      `obra=eq.${encodeURIComponent(obra)}&activo=eq.ACTIVO&select=id,nombre,legajo,categoria,jornal&order=nombre`);
+    if(!emps.length){alert(`Sin empleados activos en ${obra}.`);btn.textContent='→ Cargar';btn.disabled=false;return;}
+
+    // Get asistencia real del período para sugerir horas
+    const asist = await sbGet('asistencia',
+      `obra=eq.${encodeURIComponent(obra)}&fecha=gte.${desde}&fecha=lte.${hasta}&select=empleado,horas,jornales,feriado`);
+
+    // Map horas reales por empleado
+    const horasMap = {};
+    const feriadoMap = {};
+    (Array.isArray(asist)?asist:[]).forEach(r=>{
+      horasMap[r.empleado] = (horasMap[r.empleado]||0) + (parseFloat(r.horas)||0);
+      feriadoMap[r.empleado] = (feriadoMap[r.empleado]||0) + (parseFloat(r.feriado)||0);
+    });
+
+    acEmpleados = emps.map(e=>({
+      ...e,
+      horas_reales: horasMap[e.nombre] || 0,
+      feriado_real: feriadoMap[e.nombre] || 0,
+      hs_declarar: horasMap[e.nombre] || 0,
+      lluvia: 0, feriado: feriadoMap[e.nombre]||0,
+      accidente: 0, enfermedad: 0, obs: ''
+    }));
+
+    renderAsistContador();
+    document.getElementById('ac-main').style.display='block';
+    document.getElementById('ac-empty').style.display='none';
+  }catch(e){alert('Error: '+e.message);}
+  btn.textContent='→ Cargar'; btn.disabled=false;
+}
+
+function renderAsistContador(){
+  const tbody = document.getElementById('ac-tbody');
+  tbody.innerHTML = '';
+  acEmpleados.forEach((emp, i)=>{
+    const diff = emp.horas_reales - emp.hs_declarar;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:500;font-size:12px;">${emp.nombre}</td>
+      <td class="mono" style="font-size:11px;color:var(--text3);">${emp.legajo||'—'}</td>
+      <td style="font-size:11px;">${emp.categoria||'—'}</td>
+      <td class="mono" style="text-align:right;color:var(--ice);font-weight:600;">${emp.horas_reales.toFixed(0)}</td>
+      <td style="padding:4px 8px;">
+        <input type="number" id="ac-hs-${i}" value="${emp.hs_declarar.toFixed(0)}"
+          style="width:80px;height:28px;background:var(--c2);border:1px solid rgba(232,160,32,.3);border-radius:4px;color:var(--gold);font-family:var(--mono);font-size:12px;text-align:right;padding:0 8px;outline:none;"
+          oninput="acCalc(${i})"/>
+      </td>
+      <td style="padding:4px 8px;text-align:center;">
+        <input type="number" id="ac-ll-${i}" value="0" min="0"
+          style="width:52px;height:26px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;"/>
+      </td>
+      <td style="padding:4px 8px;text-align:center;">
+        <input type="number" id="ac-fe-${i}" value="${emp.feriado_real||0}" min="0"
+          style="width:52px;height:26px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;"/>
+      </td>
+      <td style="padding:4px 8px;text-align:center;">
+        <input type="number" id="ac-ac-${i}" value="0" min="0"
+          style="width:52px;height:26px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;"/>
+      </td>
+      <td style="padding:4px 8px;text-align:center;">
+        <input type="number" id="ac-en-${i}" value="0" min="0"
+          style="width:52px;height:26px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;"/>
+      </td>
+      <td style="padding:4px 8px;">
+        <input type="text" id="ac-ob-${i}" value=""
+          style="width:110px;height:26px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:0 6px;outline:none;"/>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  acUpdateTotals();
+}
+
+function acCalc(i){
+  acEmpleados[i].hs_declarar = parseFloat(document.getElementById(`ac-hs-${i}`)?.value)||0;
+  acUpdateTotals();
+}
+
+function acUpdateTotals(){
+  const totDecl = acEmpleados.reduce((s,e)=>s+e.hs_declarar,0);
+  const totReal = acEmpleados.reduce((s,e)=>s+e.horas_reales,0);
+  document.getElementById('ac-total-hs').textContent   = totDecl.toFixed(0);
+  document.getElementById('ac-total-real').textContent = totReal.toFixed(0);
+}
+
+async function guardarAsistContador(){
+  const desde = document.getElementById('ac-desde').value;
+  const hasta = document.getElementById('ac-hasta').value;
+  const obra  = document.getElementById('ac-obra').value;
+  const rows = acEmpleados.map((emp,i)=>({
+    obra, periodo_desde: desde, periodo_hasta: hasta,
+    empleado:      emp.nombre,
+    legajo:        emp.legajo,
+    categoria:     emp.categoria,
+    horas_reales:  emp.horas_reales,
+    horas_declaradas: parseFloat(document.getElementById(`ac-hs-${i}`)?.value)||0,
+    lluvia:        parseFloat(document.getElementById(`ac-ll-${i}`)?.value)||0,
+    feriado:       parseFloat(document.getElementById(`ac-fe-${i}`)?.value)||0,
+    accidente:     parseFloat(document.getElementById(`ac-ac-${i}`)?.value)||0,
+    enfermedad:    parseFloat(document.getElementById(`ac-en-${i}`)?.value)||0,
+    observacion:   document.getElementById(`ac-ob-${i}`)?.value.trim()||null,
+  }));
+  const btn = document.querySelector('#panel-asist-contador .btn-gold');
+  btn.textContent='Guardando...'; btn.disabled=true;
+  try{
+    await sbPost('asistencia_contador', rows);
+    setStatus('ac-st','ok', rows.length+' registros guardados.');
+  }catch(e){setStatus('ac-st','err',e.message);}
+  btn.textContent='Guardar declaración'; btn.disabled=false;
+}
+
+function resetAsistContador(){
+  acEmpleados=[];
+  document.getElementById('ac-tbody').innerHTML='';
+  document.getElementById('ac-main').style.display='none';
+  document.getElementById('ac-empty').style.display='block';
+}
+
 // ── PAGOS VIERNES ──────────────────────────────────────────
 let pvEmpleados = [];
 
@@ -1750,6 +2028,7 @@ async function consultarPagos(){
 // ── INIT ──────────────────────────────────────────────────
 addPago();
 document.getElementById('e-alta').value=today;
+// Check auth on load - don't call cargarListaEmpleados here, showApp() does it
 checkSession();
 // Load employees into liq final select
 async function cargarSelectLiqFinal(){
