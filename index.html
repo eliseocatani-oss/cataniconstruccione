@@ -345,6 +345,11 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
     <div class="ni" onclick="tab('vencimientos',this)"><span class="ic">◉</span>Vencimientos</div>
     <div class="nav-section">Análisis</div>
     <div class="ni" onclick="tab('rendimiento',this)"><span class="ic">◉</span>Rendimiento</div>
+    <div class="ni" onclick="tab('costos',this)"><span class="ic">◈</span>Control costos</div>
+    <div class="ni" onclick="tab('cashflow',this)"><span class="ic">◎</span>Flujo de caja</div>
+    <div class="nav-section">Novedades</div>
+    <div class="ni" onclick="tab('accidentes',this)"><span class="ic">⬡</span>Accidentes</div>
+    <div class="ni" onclick="tab('novedades',this)"><span class="ic">◉</span>Novedades mes</div>
   </nav>
   <div class="sb-cfg">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -533,24 +538,61 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
 <div id="panel-empleados" class="panel">
   <div class="topbar">
     <div class="topbar-inner">
-      <div><h1>Empleados</h1><p>// alta · edición · tarifas</p></div>
+      <div><h1>Empleados</h1><p>// nómina completa · filtros · historial de tarifas</p></div>
       <div class="breadcrumb">CATANI / <span>EMPLEADOS</span></div>
     </div>
   </div>
-  <div class="content" style="display:grid;grid-template-columns:280px 1fr;gap:12px;align-items:start;">
-    <!-- Lista -->
-    <div style="max-height:80vh;overflow-y:auto;">
-      <div class="card" style="padding:12px 14px;">
-        <div class="search-wrap"><input type="text" id="emp-search" placeholder="buscar empleado..." oninput="filterEmpleados()"/></div>
-        <div style="display:flex;gap:6px;margin-bottom:10px;">
-          <button class="btn btn-gold btn-sm" onclick="nuevoEmpleado()" style="flex:1;">+ Nuevo</button>
-          <button class="btn btn-nav btn-sm" onclick="cargarListaEmpleados()">↻</button>
+  <div class="content" style="display:grid;grid-template-columns:320px 1fr;gap:12px;align-items:start;">
+    <!-- Lista con filtros -->
+    <div>
+      <div class="card" style="padding:14px 16px;">
+        <!-- Búsqueda -->
+        <div style="position:relative;margin-bottom:10px;">
+          <input type="text" id="emp-search" placeholder="buscar por nombre, legajo..." oninput="filterEmpleados()"
+            style="width:100%;height:34px;background:var(--c2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:12px;padding:0 32px 0 10px;outline:none;font-family:var(--sans);"/>
+          <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;">⌕</span>
         </div>
-        <div id="emp-lista"></div>
+        <!-- Filtros -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+          <select id="emp-f-obra" onchange="filterEmpleados()" style="height:30px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:0 6px;outline:none;">
+            <option value="">Todas las obras</option>
+            <option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option><option>FUNES</option><option>PIÑERO</option>
+          </select>
+          <select id="emp-f-activo" onchange="filterEmpleados()" style="height:30px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:0 6px;outline:none;">
+            <option value="">Todos</option>
+            <option value="ACTIVO">Activos</option>
+            <option value="BAJA">Bajas</option>
+          </select>
+          <select id="emp-f-cat" onchange="filterEmpleados()" style="height:30px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:0 6px;outline:none;">
+            <option value="">Todas categorías</option>
+            <option>CAPATAZ</option><option>OFICIAL</option><option>1/2 OFICIAL</option><option>AYUDANTE</option>
+          </select>
+          <select id="emp-f-tarjeta" onchange="filterEmpleados()" style="height:30px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:0 6px;outline:none;">
+            <option value="">Con/Sin tarjeta</option>
+            <option value="si">Con tarjeta Macro</option>
+            <option value="no">Sin tarjeta</option>
+          </select>
+        </div>
+        <!-- Sort -->
+        <div style="display:flex;gap:6px;margin-bottom:10px;">
+          <select id="emp-f-orden" onchange="filterEmpleados()" style="flex:1;height:28px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text3);font-size:10px;padding:0 6px;outline:none;font-family:var(--mono);">
+            <option value="nombre">Ordenar por nombre</option>
+            <option value="legajo">Por legajo</option>
+            <option value="alta">Por antigüedad</option>
+            <option value="obra">Por obra</option>
+          </select>
+          <button class="btn btn-gold btn-sm" onclick="nuevoEmpleado()" style="white-space:nowrap;">+ Nuevo</button>
+          <button class="btn btn-nav btn-sm" onclick="cargarListaEmpleados()" title="Actualizar">↻</button>
+        </div>
+        <!-- Stats -->
+        <div style="display:flex;gap:8px;margin-bottom:10px;" id="emp-stats"></div>
+        <!-- Lista -->
+        <div id="emp-lista" style="max-height:65vh;overflow-y:auto;"></div>
       </div>
     </div>
+
     <!-- Formulario -->
-    <div style="max-height:80vh;overflow-y:auto;">
+    <div>
       <div class="card" id="emp-form-card">
         <div class="card-title" id="emp-form-title">Nuevo empleado</div>
         <div id="emp-historial" style="display:none;margin-bottom:14px;padding:10px 14px;background:var(--c2);border:1px solid var(--border);border-radius:var(--r);">
@@ -592,12 +634,18 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
           <div class="f"><label>H.extra ($/hora)</label><input type="number" id="e-hex"/></div>
           <div class="f"><label>Feriado ($)</label><input type="number" id="e-fer"/></div>
         </div>
+        <!-- Historial tarifas -->
+        <div id="emp-tarifas-hist" style="display:none;margin-top:10px;padding:10px 14px;background:var(--c2);border:1px solid var(--border);border-radius:var(--r);">
+          <div style="font-size:9px;color:var(--ice);font-family:var(--mono);letter-spacing:1.5px;font-weight:600;margin-bottom:8px;">HISTORIAL DE TARIFAS</div>
+          <div id="emp-tarifas-hist-content" style="font-size:11px;color:var(--text2);font-family:var(--mono);"></div>
+        </div>
         <div style="display:flex;gap:8px;align-items:center;margin-top:14px;">
           <button class="btn btn-gold" id="e-btn-guardar" onclick="guardarEmpleado()">Dar de alta</button>
           <button class="btn btn-ghost btn-sm" onclick="limpiarEmp()">Limpiar</button>
           <div id="e-st" class="st"></div>
         </div>
         <input type="hidden" id="e-id"/>
+        <input type="hidden" id="e-jornal-prev"/>
       </div>
     </div>
   </div>
@@ -1086,6 +1134,214 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
   </div>
 </div>
 
+
+<!-- ══ CONTROL DE COSTOS ══ -->
+<div id="panel-costos" class="panel">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div><h1>Control de costos</h1><p>// m³ real vs presupuestado · margen · proyección</p></div>
+      <div class="breadcrumb">CATANI / <span>COSTOS</span></div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Filtros</div>
+      <div class="row">
+        <div class="f" style="max-width:155px;"><label>Obra</label>
+          <select id="cc-obra"><option value="">Todas</option><option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option></select>
+        </div>
+        <div class="f" style="max-width:155px;"><label>Desde</label><input type="date" id="cc-desde"/></div>
+        <div class="f" style="max-width:155px;"><label>Hasta</label><input type="date" id="cc-hasta"/></div>
+        <div class="f" style="max-width:140px;justify-content:flex-end;"><label>&nbsp;</label>
+          <button class="btn btn-gold" onclick="calcCostos()">Calcular →</button>
+        </div>
+      </div>
+    </div>
+    <div id="cc-empty" class="empty"><div class="empty-icon">◈</div><p>seleccioná parámetros y calculá</p></div>
+    <div id="cc-res" style="display:none;">
+      <div class="metrics" id="cc-metrics"></div>
+      <!-- Costo m3 por certificado -->
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px;">
+        <div style="padding:10px 16px;border-bottom:1px solid var(--border);"><div class="card-title" style="margin:0;">Costo real por m³ vs precio certificado</div></div>
+        <table class="tbl"><thead><tr>
+          <th>Certificado</th><th>Obra</th>
+          <th style="text-align:right;">m³</th>
+          <th style="text-align:right;">Costo MO</th>
+          <th style="text-align:right;">Costo F.931</th>
+          <th style="text-align:right;">Gastos</th>
+          <th style="text-align:right;">Costo total</th>
+          <th style="text-align:right;">Precio cert.</th>
+          <th style="text-align:right;">Margen</th>
+          <th style="text-align:right;">$/m³ costo</th>
+          <th style="text-align:right;">$/m³ precio</th>
+        </tr></thead><tbody id="cc-tbody"></tbody></table>
+      </div>
+      <!-- Evolución mensual -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:10px 16px;border-bottom:1px solid var(--border);"><div class="card-title" style="margin:0;">Evolución costo MO mensual</div></div>
+        <table class="tbl"><thead><tr>
+          <th>Mes</th><th>Obra</th>
+          <th style="text-align:right;">Jornales</th>
+          <th style="text-align:right;">Horas</th>
+          <th style="text-align:right;">Costo directo</th>
+          <th style="text-align:right;">F.931</th>
+          <th style="text-align:right;">Costo real</th>
+        </tr></thead><tbody id="cc-mo-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FLUJO DE CAJA ══ -->
+<div id="panel-cashflow" class="panel">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div><h1>Flujo de caja</h1><p>// saldo banco · ingresos vs egresos · proyección viernes</p></div>
+      <div class="breadcrumb">CATANI / <span>CASHFLOW</span></div>
+    </div>
+  </div>
+  <div class="content">
+    <!-- Saldo banco -->
+    <div class="card">
+      <div class="card-title">Saldo disponible</div>
+      <div class="row">
+        <div class="f" style="max-width:200px;">
+          <label>Saldo banco ($)</label>
+          <input type="number" id="cf-saldo-banco" placeholder="0.00"/>
+        </div>
+        <div class="f" style="max-width:200px;">
+          <label>Efectivo en mano ($)</label>
+          <input type="number" id="cf-saldo-efec" placeholder="0.00"/>
+        </div>
+        <div class="f" style="max-width:160px;justify-content:flex-end;"><label>&nbsp;</label>
+          <button class="btn btn-gold" onclick="guardarSaldo()">Actualizar saldo</button>
+        </div>
+        <div class="f" style="max-width:200px;">
+          <label>Último update</label>
+          <div style="height:34px;display:flex;align-items:center;font-size:11px;color:var(--text3);font-family:var(--mono);" id="cf-ultimo-update">—</div>
+        </div>
+      </div>
+      <!-- Totales -->
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;" id="cf-saldo-cards"></div>
+    </div>
+
+    <!-- Proyección viernes -->
+    <div class="card">
+      <div class="card-title">Proyección del próximo viernes</div>
+      <div class="row">
+        <div class="f" style="max-width:155px;"><label>Semana desde</label><input type="date" id="cf-proy-desde"/></div>
+        <div class="f" style="max-width:155px;"><label>Semana hasta</label><input type="date" id="cf-proy-hasta"/></div>
+        <div class="f" style="max-width:140px;justify-content:flex-end;"><label>&nbsp;</label>
+          <button class="btn btn-nav" onclick="calcProyeccion()">Calcular →</button>
+        </div>
+      </div>
+      <div id="cf-proy-res"></div>
+    </div>
+
+    <!-- Flujo mensual -->
+    <div class="card">
+      <div class="card-title">Flujo mensual por obra</div>
+      <div class="row" style="margin-bottom:10px;">
+        <div class="f" style="max-width:155px;"><label>Desde</label><input type="date" id="cf-desde"/></div>
+        <div class="f" style="max-width:155px;"><label>Hasta</label><input type="date" id="cf-hasta"/></div>
+        <div class="f" style="max-width:140px;justify-content:flex-end;"><label>&nbsp;</label>
+          <button class="btn btn-nav" onclick="calcCashflow()">Calcular →</button>
+        </div>
+      </div>
+      <div id="cf-res"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ACCIDENTES ══ -->
+<div id="panel-accidentes" class="panel">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div><h1>Accidentes laborales</h1><p>// registro · ART · historial por empleado</p></div>
+      <div class="breadcrumb">CATANI / <span>ACCIDENTES</span></div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Registrar accidente</div>
+      <div class="row">
+        <div class="f" style="max-width:155px;"><label>Fecha</label><input type="date" id="acc-fecha"/></div>
+        <div class="f" style="max-width:155px;"><label>Obra</label>
+          <select id="acc-obra" onchange="cargarEmpAcc()">
+            <option value="">—</option><option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option><option>FUNES</option><option>PIÑERO</option>
+          </select>
+        </div>
+        <div class="f"><label>Empleado</label>
+          <select id="acc-emp"><option value="">— elegir obra —</option></select>
+        </div>
+        <div class="f" style="max-width:155px;"><label>Tipo</label>
+          <select id="acc-tipo">
+            <option>EN OBRA</option><option>IN ITINERE</option><option>ENFERMEDAD PROFESIONAL</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="f"><label>Descripción del accidente</label>
+          <input type="text" id="acc-desc" placeholder="qué ocurrió"/>
+        </div>
+        <div class="f" style="max-width:120px;"><label>Días de baja</label>
+          <input type="number" id="acc-dias" placeholder="0" min="0"/>
+        </div>
+        <div class="f" style="max-width:155px;"><label>Estado ART</label>
+          <select id="acc-art">
+            <option>PENDIENTE</option><option>DENUNCIADO</option><option>EN TRÁMITE</option><option>CERRADO</option>
+          </select>
+        </div>
+        <div class="f"><label>Nro. siniestro ART</label>
+          <input type="text" id="acc-nro" placeholder="número de expediente"/>
+        </div>
+      </div>
+      <div class="f" style="margin-bottom:10px;"><label>Observaciones</label>
+        <input type="text" id="acc-obs" placeholder="testigos, medidas tomadas, etc."/>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-gold" onclick="guardarAccidente()">Registrar</button>
+        <div id="acc-st" class="st"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Historial de accidentes</div>
+      <div class="row" style="margin-bottom:10px;">
+        <div class="f" style="max-width:155px;"><label>Obra</label>
+          <select id="acc-f-obra" onchange="consultarAccidentes()"><option value="">Todas</option><option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option></select>
+        </div>
+        <div class="f" style="max-width:140px;justify-content:flex-end;"><label>&nbsp;</label>
+          <button class="btn btn-nav" onclick="consultarAccidentes()">Ver todos</button>
+        </div>
+      </div>
+      <div id="acc-lista"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ NOVEDADES DEL MES ══ -->
+<div id="panel-novedades" class="panel">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div><h1>Novedades del mes</h1><p>// altas · bajas · cambios de categoría · para el contador</p></div>
+      <div class="breadcrumb">CATANI / <span>NOVEDADES</span></div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Filtrar período</div>
+      <div class="row">
+        <div class="f" style="max-width:155px;"><label>Mes</label><input type="month" id="nov-mes"/></div>
+        <div class="f" style="max-width:140px;justify-content:flex-end;"><label>&nbsp;</label>
+          <button class="btn btn-gold" onclick="calcNovedades()">Ver novedades →</button>
+        </div>
+      </div>
+    </div>
+    <div id="nov-empty" class="empty"><div class="empty-icon">◉</div><p>seleccioná un mes para ver las novedades</p></div>
+    <div id="nov-res" style="display:none;"></div>
+  </div>
+</div>
+
 </div><!-- .main -->
 </div><!-- .shell app -->
 
@@ -1172,6 +1428,8 @@ function showApp(){
   cargarSelectLiqFinal();
   cargarVencimientos();
   consultarAdelantos();
+  cargarSaldo();
+  consultarAccidentes();
 }
 function showLogin(){
   document.getElementById('login-screen').style.display='flex';
@@ -1191,7 +1449,7 @@ const cfg=JSON.parse(localStorage.getItem('catani_cfg')||'{}');
 document.getElementById('sb-url').value=cfg.url||'';
 document.getElementById('sb-key').value=cfg.key||'';
 const today=new Date().toISOString().split('T')[0];
-['a-fecha','g-fecha','co-fecha','lf-fecha','pv-hasta','pv-hist-hasta'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
+['a-fecha','g-fecha','co-fecha','lf-fecha','pv-hasta','pv-hist-hasta','acc-fecha'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
 const now=new Date();
 ['c-desde','c-hasta'].forEach(id=>{document.getElementById(id).value=today;});
 
@@ -2584,6 +2842,503 @@ async function marcarRenovado(id){
     await sbPatch('vencimientos', id, {renovado:true});
     cargarVencimientos();
   }catch(e){alert('Error: '+e.message);}
+}
+
+// ── EMPLEADOS FILTROS ─────────────────────────────────────────
+let empFiltrados = [];
+
+async function cargarListaEmpleados(){
+  try{
+    todosEmpleados = await sbGet('empleados','order=nombre&select=id,nombre,obra,categoria,activo,legajo,alta,baja,cuenta_macro,tarjeta_macro,jornal,transporte');
+    filterEmpleados();
+    renderEmpStats();
+  }catch(e){console.error(e);}
+}
+
+function renderEmpStats(){
+  const activos = todosEmpleados.filter(e=>e.activo==='ACTIVO').length;
+  const bajas   = todosEmpleados.filter(e=>e.activo==='BAJA').length;
+  const conTarj = todosEmpleados.filter(e=>e.activo==='ACTIVO'&&(e.cuenta_macro||e.tarjeta_macro)).length;
+  document.getElementById('emp-stats').innerHTML = `
+    <span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:3px 8px;border-radius:20px;font-family:var(--mono);">✓ ${activos} activos</span>
+    <span style="font-size:10px;background:var(--red-bg);color:var(--red);padding:3px 8px;border-radius:20px;font-family:var(--mono);">✕ ${bajas} bajas</span>
+    <span style="font-size:10px;background:rgba(123,175,212,.12);color:var(--ice);padding:3px 8px;border-radius:20px;font-family:var(--mono);">◆ ${conTarj} c/tarjeta</span>`;
+}
+
+function filterEmpleados(){
+  const q       = (document.getElementById('emp-search')?.value||'').toLowerCase();
+  const obra    = document.getElementById('emp-f-obra')?.value||'';
+  const activo  = document.getElementById('emp-f-activo')?.value||'';
+  const cat     = document.getElementById('emp-f-cat')?.value||'';
+  const tarjeta = document.getElementById('emp-f-tarjeta')?.value||'';
+  const orden   = document.getElementById('emp-f-orden')?.value||'nombre';
+
+  empFiltrados = todosEmpleados.filter(e=>{
+    if(q && !(`${e.nombre} ${e.legajo} ${e.obra} ${e.categoria}`.toLowerCase().includes(q))) return false;
+    if(obra   && e.obra     !== obra)   return false;
+    if(activo && e.activo   !== activo) return false;
+    if(cat    && e.categoria!== cat)    return false;
+    if(tarjeta==='si' && !(e.cuenta_macro||e.tarjeta_macro)) return false;
+    if(tarjeta==='no' && (e.cuenta_macro||e.tarjeta_macro))  return false;
+    return true;
+  });
+
+  // Sort
+  empFiltrados.sort((a,b)=>{
+    if(orden==='legajo') return (a.legajo||9999)-(b.legajo||9999);
+    if(orden==='alta')   return (a.alta||'').localeCompare(b.alta||'');
+    if(orden==='obra')   return (a.obra||'').localeCompare(b.obra||'');
+    return (a.nombre||'').localeCompare(b.nombre||'');
+  });
+
+  renderListaEmpleados(empFiltrados);
+}
+
+function renderListaEmpleados(list){
+  const div = document.getElementById('emp-lista'); div.innerHTML='';
+  if(!list.length){
+    div.innerHTML='<div class="empty" style="padding:20px;"><div class="empty-icon" style="font-size:18px;">◈</div><p>sin resultados</p></div>';return;
+  }
+  list.forEach(e=>{
+    const card = document.createElement('div');
+    card.className = 'emp-card';
+    const initials = (e.nombre||'?').split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+    const antiguedad = e.alta ? Math.floor((new Date()-new Date(e.alta))/(1000*60*60*24*365)) : null;
+    card.innerHTML=`
+      <div class="emp-avatar">${initials}</div>
+      <div class="emp-info">
+        <div class="emp-name">${e.nombre}</div>
+        <div class="emp-meta">${e.obra||'—'} · ${e.categoria||'—'} · Leg.${e.legajo||'—'}${antiguedad!==null?' · '+antiguedad+'a':''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;">
+        <span class="badge ${e.activo==='ACTIVO'?'badge-ok':'badge-err'}" style="font-size:9px;">${e.activo==='ACTIVO'?'ACT':'BAJA'}</span>
+        ${(e.cuenta_macro||e.tarjeta_macro)?'<span style="font-size:9px;color:var(--ice);">◆ Macro</span>':''}
+      </div>`;
+    card.onclick = ()=>editarEmpleado(e.id);
+    div.appendChild(card);
+  });
+}
+
+// ── EMPLEADOS GUARDAR CON HISTORIAL TARIFAS ───────────────────
+async function editarEmpleado(id){
+  try{
+    const data = await sbGet('empleados',`id=eq.${id}`);
+    if(!data.length)return;
+    const e = data[0]; empEditId = id;
+    document.getElementById('e-id').value = id;
+    document.getElementById('e-jornal-prev').value = e.jornal||0;
+    document.getElementById('emp-form-title').textContent = 'Editar empleado';
+    document.getElementById('e-btn-guardar').textContent  = 'Guardar cambios';
+    const set=(el,val)=>{const d=document.getElementById(el);if(d)d.value=val||'';};
+    set('e-nom',e.nombre);set('e-leg',e.legajo);set('e-cuil',e.cuil);set('e-dni',e.dni);
+    set('e-fnac',e.fecha_nac);set('e-dom',e.domicilio);set('e-loc',e.localidad);
+    set('e-obra',e.obra);set('e-cat',e.categoria);set('e-activo',e.activo||'ACTIVO');
+    set('e-alta',e.alta);set('e-baja',e.baja);set('e-reingreso',e.reingreso);set('e-segunda-baja',e.segunda_baja);
+    set('e-os',e.obra_social);set('e-cuenta',e.cuenta_macro);
+    set('e-jorn',e.jornal);set('e-trans',e.transporte);set('e-hex',e.hextra);set('e-fer',e.feriado);
+    // Historial
+    const hist = document.getElementById('emp-historial');
+    const histContent = document.getElementById('emp-historial-content');
+    const lines = [];
+    if(e.alta)         lines.push(`✅ Alta: ${e.alta}`);
+    if(e.baja)         lines.push(`🔴 Baja: ${e.baja}`);
+    if(e.reingreso)    lines.push(`✅ Reingreso: ${e.reingreso}`);
+    if(e.segunda_baja) lines.push(`🔴 2da Baja: ${e.segunda_baja}`);
+    if(lines.length){histContent.innerHTML=lines.join('<br>');hist.style.display='block';}
+    else{hist.style.display='none';}
+    // Historial tarifas
+    try{
+      const tarifas = await sbGet('historial_tarifas',`empleado_id=eq.${id}&order=fecha.desc&limit=5`);
+      const th = document.getElementById('emp-tarifas-hist');
+      const thc = document.getElementById('emp-tarifas-hist-content');
+      if(tarifas.length){
+        thc.innerHTML = tarifas.map(t=>`<div style="border-bottom:1px solid var(--border);padding:4px 0;">${t.fecha} — Jornal: ${pesos(t.jornal_anterior)} → ${pesos(t.jornal_nuevo)}</div>`).join('');
+        th.style.display='block';
+      }else{th.style.display='none';}
+    }catch(e){document.getElementById('emp-tarifas-hist').style.display='none';}
+  }catch(e){console.error(e);}
+}
+
+async function guardarEmpleado(){
+  const nombre = document.getElementById('e-nom').value.trim();
+  if(!nombre){setStatus('e-st','warn','El nombre es obligatorio.');return;}
+  const cuil_raw = document.getElementById('e-cuil').value.trim();
+  const jornalNuevo = parseFloat(document.getElementById('e-jorn').value)||null;
+  const jornalPrev  = parseFloat(document.getElementById('e-jornal-prev').value)||0;
+  const data={nombre,activo:document.getElementById('e-activo').value||'ACTIVO',
+    legajo:parseInt(document.getElementById('e-leg').value)||null,
+    cuil:cuil_raw||null,cuil_sin_guion:parseInt(cuil_raw.replace(/-/g,''))||null,
+    dni:parseInt(document.getElementById('e-dni').value)||null,
+    fecha_nac:document.getElementById('e-fnac').value||null,
+    domicilio:document.getElementById('e-dom').value.trim()||null,
+    localidad:document.getElementById('e-loc').value.trim()||null,
+    obra:document.getElementById('e-obra').value||null,
+    categoria:document.getElementById('e-cat').value||null,
+    alta:document.getElementById('e-alta').value||null,
+    baja:document.getElementById('e-baja').value||null,
+    reingreso:document.getElementById('e-reingreso').value||null,
+    segunda_baja:document.getElementById('e-segunda-baja').value||null,
+    obra_social:document.getElementById('e-os').value.trim()||null,
+    cuenta_macro:document.getElementById('e-cuenta').value.trim()||null,
+    jornal:jornalNuevo,
+    transporte:parseFloat(document.getElementById('e-trans').value)||null,
+    hextra:parseFloat(document.getElementById('e-hex').value)||null,
+    feriado:parseFloat(document.getElementById('e-fer').value)||null};
+  const btn=document.getElementById('e-btn-guardar');btn.textContent='Guardando...';btn.disabled=true;
+  try{
+    if(empEditId){
+      await sbPatch('empleados',empEditId,data);
+      // Si cambió el jornal, guardar historial
+      if(jornalNuevo && jornalNuevo !== jornalPrev){
+        try{
+          await sbPost('historial_tarifas',{
+            empleado_id:empEditId,empleado:nombre,
+            fecha:today,jornal_anterior:jornalPrev,jornal_nuevo:jornalNuevo
+          });
+        }catch(e){console.warn('Historial tarifas no guardado:',e);}
+      }
+      setStatus('e-st','ok','Empleado actualizado.');
+    }else{
+      await sbPost('empleados',data);
+      setStatus('e-st','ok','Empleado dado de alta.');limpiarEmp();
+    }
+    cargarListaEmpleados();
+  }catch(e){setStatus('e-st','err',e.message);}
+  btn.textContent=empEditId?'Guardar cambios':'Dar de alta';btn.disabled=false;
+}
+
+// ── CONTROL DE COSTOS ──────────────────────────────────────────
+async function calcCostos(){
+  const obra  = document.getElementById('cc-obra').value;
+  const desde = document.getElementById('cc-desde').value;
+  const hasta = document.getElementById('cc-hasta').value;
+  if(!desde||!hasta){alert('Seleccioná fechas.');return;}
+  const btn=document.querySelector('#panel-costos .btn-gold');btn.textContent='Calculando...';btn.disabled=true;
+  try{
+    let aQs=`fecha=gte.${desde}&fecha=lte.${hasta}&select=obra,jornales,horas,total`;
+    if(obra)aQs+=`&obra=eq.${encodeURIComponent(obra)}`;
+    let cQs=`fecha_desde=gte.${desde}&fecha_hasta=lte.${hasta}&select=obra,certificado,fecha_desde,fecha_hasta,m3_reales,total`;
+    if(obra)cQs+=`&obra=eq.${encodeURIComponent(obra)}`;
+    let gQs=`fecha=gte.${desde}&fecha=lte.${hasta}&select=obra,monto`;
+    if(obra)gQs+=`&obra=eq.${encodeURIComponent(obra)}`;
+    let fQs=`periodo=gte.${desde.slice(0,7)}-01&periodo=lte.${hasta.slice(0,7)}-01&select=obra,costo_total`;
+    if(obra)fQs+=`&obra=eq.${encodeURIComponent(obra)}`;
+
+    const [asist,certs,gastos,f931] = await Promise.all([
+      sbGet('asistencia',aQs),sbGet('certificacion',cQs),
+      sbGet('gastos',gQs),sbGet('f931_detalle',fQs)
+    ]);
+
+    // Aggregate by certificado
+    const certMap={};
+    (Array.isArray(certs)?certs:[]).forEach(r=>{
+      const k=`${r.obra}__${r.certificado}`;
+      if(!certMap[k])certMap[k]={obra:r.obra,cert:r.certificado,desde:r.fecha_desde,hasta:r.fecha_hasta,m3:0,facturado:0};
+      certMap[k].m3+=parseFloat(r.m3_reales)||0;
+      certMap[k].facturado+=parseFloat(r.total)||0;
+    });
+
+    // Aggregate MO and gastos and f931 by obra
+    const moMap={},gasMap={},f931Map={};
+    (Array.isArray(asist)?asist:[]).forEach(r=>{moMap[r.obra]=(moMap[r.obra]||0)+(parseFloat(r.total)||0);});
+    (Array.isArray(gastos)?gastos:[]).forEach(r=>{gasMap[r.obra]=(gasMap[r.obra]||0)+(parseFloat(r.monto)||0);});
+    (Array.isArray(f931)?f931:[]).forEach(r=>{f931Map[r.obra]=(f931Map[r.obra]||0)+(parseFloat(r.costo_total)||0);});
+
+    const tot_fact=Object.values(certMap).reduce((s,c)=>s+c.facturado,0);
+    const tot_mo=Object.values(moMap).reduce((s,v)=>s+v,0);
+    const tot_gas=Object.values(gasMap).reduce((s,v)=>s+v,0);
+    const tot_f931=Object.values(f931Map).reduce((s,v)=>s+v,0);
+    const tot_costo=tot_mo+tot_gas+tot_f931;
+    const margen=tot_fact-tot_costo;
+
+    document.getElementById('cc-metrics').innerHTML=`
+      <div class="metric"><div class="ml">Facturado</div><div class="mv" style="font-size:16px;color:var(--green);">${pesos(tot_fact)}</div></div>
+      <div class="metric"><div class="ml">Costo MO</div><div class="mv" style="font-size:16px;">${pesos(tot_mo)}</div></div>
+      <div class="metric"><div class="ml">F.931</div><div class="mv" style="font-size:16px;">${pesos(tot_f931)}</div></div>
+      <div class="metric"><div class="ml">Gastos</div><div class="mv" style="font-size:16px;">${pesos(tot_gas)}</div></div>
+      <div class="metric"><div class="ml">Costo total</div><div class="mv" style="font-size:16px;color:var(--amber);">${pesos(tot_costo)}</div></div>
+      <div class="metric"><div class="ml">Margen bruto</div><div class="mv" style="font-size:16px;color:${margen>=0?'var(--green)':'var(--red)'};">${pesos(margen)}</div><div class="ms">${tot_fact>0?((margen/tot_fact)*100).toFixed(1)+'%':'—'}</div></div>`;
+
+    // Tabla por certificado
+    const tbody=document.getElementById('cc-tbody');tbody.innerHTML='';
+    Object.values(certMap).forEach(c=>{
+      const mo_obra=moMap[c.obra]||0;
+      const gas_obra=gasMap[c.obra]||0;
+      const f_obra=f931Map[c.obra]||0;
+      const costo=mo_obra+gas_obra+f_obra;
+      const margen_c=c.facturado-costo;
+      const m3=c.m3||0;
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td style="font-weight:500;">${c.cert}</td><td>${c.obra}</td>
+        <td class="mono" style="text-align:right;">${m3.toFixed(2)}</td>
+        <td class="mono" style="text-align:right;">${pesos(mo_obra)}</td>
+        <td class="mono" style="text-align:right;">${pesos(f_obra)}</td>
+        <td class="mono" style="text-align:right;">${pesos(gas_obra)}</td>
+        <td class="mono" style="text-align:right;color:var(--amber);">${pesos(costo)}</td>
+        <td class="mono" style="text-align:right;color:var(--green);">${pesos(c.facturado)}</td>
+        <td class="mono" style="text-align:right;font-weight:600;color:${margen_c>=0?'var(--green)':'var(--red)'};">${pesos(margen_c)}</td>
+        <td class="mono" style="text-align:right;">${m3>0?pesos(costo/m3):'—'}</td>
+        <td class="mono" style="text-align:right;">${m3>0?pesos(c.facturado/m3):'—'}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Evolución mensual MO
+    let moMesQs=`fecha=gte.${desde}&fecha=lte.${hasta}&select=obra,fecha,jornales,horas,total`;
+    if(obra)moMesQs+=`&obra=eq.${encodeURIComponent(obra)}`;
+    const asistMes=await sbGet('asistencia',moMesQs);
+    const mesMOMap={};
+    (Array.isArray(asistMes)?asistMes:[]).forEach(r=>{
+      const mes=r.fecha?.slice(0,7);
+      const k=`${mes}__${r.obra}`;
+      if(!mesMOMap[k])mesMOMap[k]={mes,obra:r.obra,jornales:0,horas:0,costo:0};
+      mesMOMap[k].jornales+=parseFloat(r.jornales)||0;
+      mesMOMap[k].horas+=parseFloat(r.horas)||0;
+      mesMOMap[k].costo+=parseFloat(r.total)||0;
+    });
+    const moTbody=document.getElementById('cc-mo-tbody');moTbody.innerHTML='';
+    Object.values(mesMOMap).sort((a,b)=>a.mes.localeCompare(b.mes)).forEach(m=>{
+      const f931_mes=f931Map[m.obra]||0;
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="mono">${m.mes}</td><td>${m.obra}</td>
+        <td class="mono" style="text-align:right;">${m.jornales.toFixed(1)}</td>
+        <td class="mono" style="text-align:right;">${m.horas.toFixed(0)}</td>
+        <td class="mono" style="text-align:right;">${pesos(m.costo)}</td>
+        <td class="mono" style="text-align:right;">${pesos(f931_mes)}</td>
+        <td class="mono" style="text-align:right;font-weight:600;color:var(--gold);">${pesos(m.costo+f931_mes)}</td>`;
+      moTbody.appendChild(tr);
+    });
+
+    document.getElementById('cc-res').style.display='block';
+    document.getElementById('cc-empty').style.display='none';
+  }catch(e){alert('Error: '+e.message);}
+  btn.textContent='Calcular →';btn.disabled=false;
+}
+
+// ── CASHFLOW ───────────────────────────────────────────────────
+async function guardarSaldo(){
+  const banco = parseFloat(document.getElementById('cf-saldo-banco').value)||0;
+  const efec  = parseFloat(document.getElementById('cf-saldo-efec').value)||0;
+  try{
+    await sbPost('saldo_disponible',{fecha:today,saldo_banco:banco,efectivo_mano:efec,total:banco+efec});
+    setStatus? null : null;
+    document.getElementById('cf-ultimo-update').textContent=`Actualizado: ${today}`;
+    renderSaldoCards(banco,efec);
+    calcProyeccion();
+  }catch(e){alert('Error: '+e.message);}
+}
+
+async function cargarSaldo(){
+  try{
+    const data=await sbGet('saldo_disponible','order=fecha.desc&limit=1');
+    if(data.length){
+      const s=data[0];
+      document.getElementById('cf-saldo-banco').value=s.saldo_banco||0;
+      document.getElementById('cf-saldo-efec').value=s.efectivo_mano||0;
+      document.getElementById('cf-ultimo-update').textContent=`Último update: ${s.fecha}`;
+      renderSaldoCards(s.saldo_banco||0,s.efectivo_mano||0);
+    }
+  }catch(e){}
+}
+
+function renderSaldoCards(banco,efec){
+  document.getElementById('cf-saldo-cards').innerHTML=`
+    <div class="metric"><div class="ml">Banco</div><div class="mv" style="font-size:18px;color:var(--ice);">${pesos(banco)}</div></div>
+    <div class="metric"><div class="ml">Efectivo</div><div class="mv" style="font-size:18px;color:var(--gold);">${pesos(efec)}</div></div>
+    <div class="metric"><div class="ml">Total disponible</div><div class="mv" style="font-size:18px;color:var(--green);">${pesos(banco+efec)}</div></div>`;
+}
+
+async function calcProyeccion(){
+  const desde=document.getElementById('cf-proy-desde').value;
+  const hasta=document.getElementById('cf-proy-hasta').value;
+  if(!desde||!hasta)return;
+  try{
+    const asist=await sbGet('asistencia',`fecha=gte.${desde}&fecha=lte.${hasta}&select=obra,empleado,total`);
+    const adelantos=await sbGet('adelantos',`descontado=eq.false&select=empleado,obra,monto`);
+    const saldoData=await sbGet('saldo_disponible','order=fecha.desc&limit=1');
+    const saldo=saldoData.length?(parseFloat(saldoData[0].saldo_banco)||0)+(parseFloat(saldoData[0].efectivo_mano)||0):0;
+
+    // Total a pagar por obra
+    const obraMap={};
+    (Array.isArray(asist)?asist:[]).forEach(r=>{
+      obraMap[r.obra]=(obraMap[r.obra]||0)+(parseFloat(r.total)||0);
+    });
+    // Restar adelantos pendientes
+    (Array.isArray(adelantos)?adelantos:[]).forEach(r=>{
+      if(obraMap[r.obra]) obraMap[r.obra]-=(parseFloat(r.monto)||0);
+    });
+    const totalViernes=Object.values(obraMap).reduce((s,v)=>s+v,0);
+    const alcanza=saldo>=totalViernes;
+
+    document.getElementById('cf-proy-res').innerHTML=`
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+        ${Object.entries(obraMap).map(([o,t])=>`
+          <div class="metric"><div class="ml">${o}</div><div class="mv" style="font-size:16px;">${pesos(t)}</div></div>`).join('')}
+        <div class="metric"><div class="ml">Total a pagar</div><div class="mv" style="font-size:18px;color:var(--amber);">${pesos(totalViernes)}</div></div>
+        <div class="metric" style="border-color:${alcanza?'rgba(29,185,84,.3)':'rgba(230,57,70,.3)'};">
+          <div class="ml">Saldo disponible</div>
+          <div class="mv" style="font-size:18px;color:${alcanza?'var(--green)':'var(--red)'};">${pesos(saldo)}</div>
+          <div class="ms" style="color:${alcanza?'var(--green)':'var(--red)'};">${alcanza?'✓ Alcanza':'⚠ FALTA '+pesos(totalViernes-saldo)}</div>
+        </div>
+      </div>`;
+  }catch(e){console.error(e);}
+}
+
+async function calcCashflow(){
+  const desde=document.getElementById('cf-desde').value;
+  const hasta=document.getElementById('cf-hasta').value;
+  if(!desde||!hasta){alert('Seleccioná fechas.');return;}
+  try{
+    const [asist,certs,gastos,cobr]=await Promise.all([
+      sbGet('asistencia',`fecha=gte.${desde}&fecha=lte.${hasta}&select=obra,fecha,total`),
+      sbGet('cobranzas',`fecha=gte.${desde}&fecha=lte.${hasta}&select=obra,fecha,monto`),
+      sbGet('gastos',`fecha=gte.${desde}&fecha=lte.${hasta}&select=obra,fecha,monto`),
+      sbGet('pagos_semanales',`fecha_viernes=gte.${desde}&fecha_viernes=lte.${hasta}&select=obra,fecha_viernes,total_pagado`)
+    ]);
+
+    // Aggregate by mes+obra
+    const mapa={};
+    const add=(arr,campo_fecha,campo_val,tipo)=>{
+      (Array.isArray(arr)?arr:[]).forEach(r=>{
+        const mes=(r[campo_fecha]||'').slice(0,7);
+        const k=`${mes}__${r.obra}`;
+        if(!mapa[k])mapa[k]={mes,obra:r.obra,ingresos:0,mo:0,gastos:0,sobres:0};
+        mapa[k][tipo]+=(parseFloat(r[campo_val])||0);
+      });
+    };
+    add(certs,'fecha','monto','ingresos');
+    add(asist,'fecha','total','mo');
+    add(gastos,'fecha','monto','gastos');
+    add(cobr,'fecha_viernes','total_pagado','sobres');
+
+    const rows=Object.values(mapa).sort((a,b)=>a.mes.localeCompare(b.mes)||a.obra.localeCompare(b.obra));
+    document.getElementById('cf-res').innerHTML=rows.length?`
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>Mes</th><th>Obra</th>
+          <th style="text-align:right;">Ingresos</th>
+          <th style="text-align:right;">MO</th>
+          <th style="text-align:right;">Gastos</th>
+          <th style="text-align:right;">Sobres pagados</th>
+          <th style="text-align:right;">Resultado</th>
+        </tr></thead>
+        <tbody>${rows.map(r=>{
+          const eg=r.mo+r.gastos;
+          const res=r.ingresos-eg;
+          return`<tr>
+            <td class="mono">${r.mes}</td><td>${r.obra}</td>
+            <td class="mono" style="text-align:right;color:var(--green);">${pesos(r.ingresos)}</td>
+            <td class="mono" style="text-align:right;">${pesos(r.mo)}</td>
+            <td class="mono" style="text-align:right;">${pesos(r.gastos)}</td>
+            <td class="mono" style="text-align:right;color:var(--amber);">${pesos(r.sobres)}</td>
+            <td class="mono" style="text-align:right;font-weight:600;color:${res>=0?'var(--green)':'var(--red)'};">${pesos(res)}</td>
+          </tr>`;}).join('')}
+        </tbody>
+      </table></div>`:'<div class="empty"><p>sin datos en ese período</p></div>';
+  }catch(e){console.error(e);}
+}
+
+// ── ACCIDENTES ─────────────────────────────────────────────────
+async function cargarEmpAcc(){
+  const obra=document.getElementById('acc-obra').value;
+  const sel=document.getElementById('acc-emp');
+  sel.innerHTML='<option value="">Cargando...</option>';
+  if(!obra){sel.innerHTML='<option value="">— elegir obra —</option>';return;}
+  try{
+    const data=await sbGet('empleados',`obra=eq.${encodeURIComponent(obra)}&activo=eq.ACTIVO&select=nombre&order=nombre`);
+    sel.innerHTML='<option value="">— seleccionar —</option>';
+    data.forEach(e=>{const opt=document.createElement('option');opt.value=e.nombre;opt.textContent=e.nombre;sel.appendChild(opt);});
+  }catch(e){sel.innerHTML='<option value="">Error</option>';}
+}
+
+async function guardarAccidente(){
+  const fecha=document.getElementById('acc-fecha').value;
+  const emp=document.getElementById('acc-emp').value;
+  const obra=document.getElementById('acc-obra').value;
+  if(!fecha||!emp||!obra){setStatus('acc-st','warn','Fecha, obra y empleado son obligatorios.');return;}
+  const row={fecha,obra,empleado:emp,tipo:document.getElementById('acc-tipo').value,
+    descripcion:document.getElementById('acc-desc').value.trim()||null,
+    dias_baja:parseInt(document.getElementById('acc-dias').value)||0,
+    estado_art:document.getElementById('acc-art').value,
+    nro_siniestro:document.getElementById('acc-nro').value.trim()||null,
+    observaciones:document.getElementById('acc-obs').value.trim()||null};
+  const btn=document.querySelector('#panel-accidentes .btn-gold');btn.textContent='Guardando...';btn.disabled=true;
+  try{
+    await sbPost('accidentes',row);
+    setStatus('acc-st','ok','Accidente registrado.');
+    ['acc-desc','acc-dias','acc-nro','acc-obs'].forEach(id=>document.getElementById(id).value='');
+    consultarAccidentes();
+  }catch(e){setStatus('acc-st','err',e.message);}
+  btn.textContent='Registrar';btn.disabled=false;
+}
+
+async function consultarAccidentes(){
+  const obra=document.getElementById('acc-f-obra').value;
+  let qs='order=fecha.desc';
+  if(obra)qs+=`&obra=eq.${encodeURIComponent(obra)}`;
+  try{
+    const data=await sbGet('accidentes',qs);
+    const div=document.getElementById('acc-lista');
+    if(!data.length){div.innerHTML='<div class="empty"><div class="empty-icon" style="font-size:18px;">⬡</div><p>sin accidentes registrados</p></div>';return;}
+    div.innerHTML=`<div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Fecha</th><th>Obra</th><th>Empleado</th><th>Tipo</th><th>Días baja</th><th>ART</th><th>Nro. siniestro</th><th>Descripción</th></tr></thead>
+      <tbody>${data.map(r=>`<tr>
+        <td class="mono" style="font-size:11px;">${r.fecha}</td>
+        <td>${r.obra}</td>
+        <td style="font-weight:500;">${r.empleado}</td>
+        <td><span class="badge badge-warn" style="font-size:9px;">${r.tipo}</span></td>
+        <td class="mono" style="text-align:center;">${r.dias_baja||0}</td>
+        <td><span class="badge ${r.estado_art==='CERRADO'?'badge-ok':r.estado_art==='DENUNCIADO'?'badge-info':'badge-warn'}" style="font-size:9px;">${r.estado_art}</span></td>
+        <td class="mono" style="font-size:11px;">${r.nro_siniestro||'—'}</td>
+        <td style="font-size:11px;color:var(--text3);">${r.descripcion||'—'}</td>
+      </tr>`).join('')}
+      </tbody></table></div>`;
+  }catch(e){console.error(e);}
+}
+
+// ── NOVEDADES DEL MES ──────────────────────────────────────────
+async function calcNovedades(){
+  const mes=document.getElementById('nov-mes').value;
+  if(!mes){alert('Seleccioná un mes.');return;}
+  const desde=mes+'-01';
+  const hasta=mes+'-31';
+  try{
+    const emps=await sbGet('empleados','select=nombre,obra,categoria,activo,alta,baja,reingreso,segunda_baja,legajo');
+    const altas=emps.filter(e=>e.alta>=desde&&e.alta<=hasta);
+    const bajas=emps.filter(e=>e.baja>=desde&&e.baja<=hasta);
+    const reingresos=emps.filter(e=>e.reingreso>=desde&&e.reingreso<=hasta);
+    const div=document.getElementById('nov-res');
+
+    const seccion=(titulo,lista,color,icono)=>{
+      if(!lista.length)return'';
+      return`<div class="card" style="margin-bottom:10px;">
+        <div class="card-title" style="color:${color};">${icono} ${titulo} (${lista.length})</div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>Legajo</th><th>Nombre</th><th>Obra</th><th>Categoría</th><th>Fecha</th></tr></thead>
+          <tbody>${lista.map(e=>`<tr>
+            <td class="mono">${e.legajo||'—'}</td>
+            <td style="font-weight:500;">${e.nombre}</td>
+            <td>${e.obra||'—'}</td>
+            <td>${e.categoria||'—'}</td>
+            <td class="mono">${titulo==='Altas'?e.alta:titulo==='Bajas'?e.baja:e.reingreso}</td>
+          </tr>`).join('')}
+          </tbody></table></div></div>`;
+    };
+
+    const html_nov=seccion('Altas',altas,'var(--green)','✅')+
+                   seccion('Bajas',bajas,'var(--red)','🔴')+
+                   seccion('Reingresos',reingresos,'var(--ice)','🔄');
+
+    if(!html_nov){
+      div.innerHTML='<div class="empty"><div class="empty-icon" style="font-size:18px;">◉</div><p>sin novedades en '+mes+'</p></div>';
+    }else{
+      div.innerHTML=`<div style="display:flex;gap:10px;margin-bottom:12px;">
+        <div class="metric"><div class="ml">Altas</div><div class="mv" style="color:var(--green);">${altas.length}</div></div>
+        <div class="metric"><div class="ml">Bajas</div><div class="mv" style="color:var(--red);">${bajas.length}</div></div>
+        <div class="metric"><div class="ml">Reingresos</div><div class="mv" style="color:var(--ice);">${reingresos.length}</div></div>
+      </div>`+html_nov;
+    }
+    document.getElementById('nov-res').style.display='block';
+    document.getElementById('nov-empty').style.display='none';
+  }catch(e){console.error(e);}
 }
 
 // ── INIT ──────────────────────────────────────────────────
