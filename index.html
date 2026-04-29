@@ -407,10 +407,11 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
             <thead><tr>
               <th style="width:28px;"></th>
               <th>Empleado</th>
-              <th style="width:170px;">Jornales</th>
+              <th style="width:175px;">Jornales</th>
               <th style="width:60px;text-align:center;">Transp.</th>
               <th style="width:68px;text-align:center;">Hs.ext</th>
               <th style="width:60px;text-align:center;">Feriado</th>
+              <th style="width:130px;">Obra del día</th>
               <th style="width:100px;text-align:right;">Total</th>
             </tr></thead>
             <tbody id="a-tbody"></tbody>
@@ -1428,8 +1429,6 @@ function showApp(){
   cargarSelectLiqFinal();
   cargarVencimientos();
   consultarAdelantos();
-  cargarSaldo();
-  consultarAccidentes();
 }
 function showLogin(){
   document.getElementById('login-screen').style.display='flex';
@@ -1449,7 +1448,7 @@ const cfg=JSON.parse(localStorage.getItem('catani_cfg')||'{}');
 document.getElementById('sb-url').value=cfg.url||'';
 document.getElementById('sb-key').value=cfg.key||'';
 const today=new Date().toISOString().split('T')[0];
-['a-fecha','g-fecha','co-fecha','lf-fecha','pv-hasta','pv-hist-hasta','acc-fecha'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
+['a-fecha','g-fecha','co-fecha','lf-fecha','pv-hasta','pv-hist-hasta'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
 const now=new Date();
 ['c-desde','c-hasta'].forEach(id=>{document.getElementById(id).value=today;});
 
@@ -1539,6 +1538,7 @@ function renderAsist(){
   const tbody=document.getElementById('a-tbody');tbody.innerHTML='';
   empData.forEach((emp,i)=>{
     const tr=document.createElement('tr');tr.id=`tr-${i}`;tr.className='present';
+    const obraOpts=['CAPUA','SAN JUSTO','EPRECO','FUNES','PIÑERO'].map(o=>`<option value="${o}" ${o===emp.obra?'selected':''}>${o}</option>`).join('');
     tr.innerHTML=`<td><div class="ri">
       <input type="checkbox" checked onchange="toggleP(${i},this)"/>
       <div class="en">${emp.nombre}</div>
@@ -1548,10 +1548,12 @@ function renderAsist(){
         <button class="jb active" onclick="setJ(${i},1,this)">1</button>
         <button class="jb" onclick="setJ(${i},1.5,this)">1½</button>
         <button class="jb" onclick="setJ(${i},2,this)">2</button>
+        <button class="jb" onclick="setSoloTrans(${i},this)" title="Solo transporte" style="color:var(--ice);border-color:rgba(123,175,212,.3);">T</button>
       </div>
       <div style="text-align:center;"><label class="tog"><input type="checkbox" id="t${i}-tr" ${emp._trans?'checked':''} onchange="cr(${i})"><span class="tsl"></span></label></div>
       <div style="text-align:center;"><input class="hi" type="number" id="t${i}-hx" value="0" min="0" step="0.5" onchange="cr(${i})"/></div>
       <div style="text-align:center;"><label class="tog"><input type="checkbox" id="t${i}-fe" onchange="cr(${i})"><span class="tsl"></span></label></div>
+      <select id="t${i}-obra" onchange="cr(${i})" style="height:22px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text3);font-size:9px;padding:0 3px;outline:none;max-width:110px;">${obraOpts}</select>
       <div class="tp" id="t${i}-tot">$0</div>
     </div></td>`;
     tbody.appendChild(tr);cr(i);
@@ -1567,6 +1569,7 @@ function toggleP(i,cb){
   cr(i);updateCount();
 }
 function setJ(i,val,btn){
+  empData[i]._soloTrans = false; // clear solo trans flag
   empData[i]._j=val;
   btn.closest('.js').querySelectorAll('.jb').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -1574,13 +1577,35 @@ function setJ(i,val,btn){
   if(cb){cb.checked=val>0;document.getElementById(`tr-${i}`).className=val>0?'present':'absent';}
   cr(i);updateCount();
 }
+function setSoloTrans(i, btn){
+  // Solo transporte: jornal=0, transporte=1
+  empData[i]._j = 0;
+  empData[i]._soloTrans = true;
+  // Reset jornal buttons
+  btn.closest('.js').querySelectorAll('.jb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Force transporte on
+  const tr = document.getElementById(`t${i}-tr`);
+  if(tr) tr.checked = true;
+  // Keep row as present (transporte counts)
+  const cb = document.querySelector(`#tr-${i} input[type=checkbox]`);
+  if(cb){ cb.checked = true; document.getElementById(`tr-${i}`).className = 'present'; }
+  cr(i); updateCount();
+}
+
 function cr(i){
   const emp=empData[i];const j=emp._j;
   const tr=document.getElementById(`t${i}-tr`)?.checked||false;
   const hx=parseFloat(document.getElementById(`t${i}-hx`)?.value)||0;
   const fe=document.getElementById(`t${i}-fe`)?.checked||false;
   emp._trans=tr;emp._hex=hx;emp._fer=fe;
-  const total=j*(emp.jornal||0)+(tr&&j>0?emp.transporte||0:0)+hx*(emp.hextra||0)+(fe?emp.feriado||0:0);
+  // Read obra del día
+  const obraEl=document.getElementById(`t${i}-obra`);
+  if(obraEl) emp._obra_dia=obraEl.value;
+  // Solo transporte: paga transporte aunque jornal=0
+  const transMonto=(tr&&(j>0||emp._soloTrans)?emp.transporte||0:0);
+  const total=j*(emp.jornal||0)+transMonto+hx*(emp.hextra||0)+(fe?emp.feriado||0:0);
+  emp._soloTrans=emp._soloTrans||false;
   emp._total=total;
   const el=document.getElementById(`t${i}-tot`);if(el)el.textContent=pesos(total);
   updateTotalDia();
@@ -1593,17 +1618,26 @@ async function guardarAsistencia(){
   const fecha=document.getElementById('a-fecha').value,obra=document.getElementById('a-obra').value;
   if(!fecha||!obra){alert('Completá fecha y obra.');return;}
   const hpj=horasPorJornal(fecha);
-  const rows=empData.filter(e=>e._j>0||e._fer).map(e=>({
-    fecha,obra,empleado:e.nombre,jornales:e._j,
-    horas:parseFloat((e._j*hpj).toFixed(2)),
-    transporte:e._trans?1:0,h_extra:e._hex,feriado:e._fer?1:0,
-    jornal_pesos:Math.round(e._j*(e.jornal||0)),
-    transporte_pesos:Math.round(e._trans&&e._j>0?e.transporte||0:0),
-    hextra_pesos:Math.round(e._hex*(e.hextra||0)),
-    feriado_pesos:Math.round(e._fer?e.feriado||0:0),
-    total:Math.round(e._total||0)
-  }));
-  if(!rows.length){setStatus('a-st','warn','Sin jornales para guardar.');return;}
+  // Include solo-transporte employees (j=0 but trans=1)
+  const rows=empData.filter(e=>e._j>0||e._fer||e._soloTrans).map(e=>{
+    const transMonto=e._trans&&(e._j>0||e._soloTrans)?e.transporte||0:0;
+    return{
+      fecha,
+      obra:e._obra_dia||obra,  // usa obra del día si fue reasignado
+      empleado:e.nombre,
+      jornales:e._j,
+      horas:parseFloat((e._j*hpj).toFixed(2)),
+      transporte:e._trans?1:0,
+      h_extra:e._hex,
+      feriado:e._fer?1:0,
+      jornal_pesos:Math.round(e._j*(e.jornal||0)),
+      transporte_pesos:Math.round(transMonto),
+      hextra_pesos:Math.round(e._hex*(e.hextra||0)),
+      feriado_pesos:Math.round(e._fer?e.feriado||0:0),
+      total:Math.round(e._total||0),
+    };
+  });
+  if(!rows.length){setStatus('a-st','warn','Sin registros para guardar.');return;}
   const btn=document.querySelector('#panel-asistencia .btn-gold');btn.textContent='Guardando...';btn.disabled=true;
   try{await sbPost('asistencia',rows);setStatus('a-st','ok',rows.length+' registros guardados.');}
   catch(e){setStatus('a-st','err',e.message);}
