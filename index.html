@@ -1545,7 +1545,7 @@ function saveCfgFromLogin(){
 let _sbClient = null;
 function getSBClient(){
   if(_sbClient) return _sbClient;
-  _sbClient = window.supabase.createClient('https://igjxeatnhgvnkmwtldxw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA');
+  _sbClient = window.supabase.createClient('https://igjxeatnhgvnkmwtldxw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjQ1NjksImV4cCI6MjA5MjY0MDU2OX0.YP9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA');
   return _sbClient;
 }
 
@@ -1573,8 +1573,8 @@ function initLoginScreen(){
   const urlEl = document.getElementById('login-sb-url');
   const keyEl = document.getElementById('login-sb-key');
   if(urlEl) urlEl.value = 'https://igjxeatnhgvnkmwtldxw.supabase.co';
-  if(keyEl) keyEl.value = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA';
-  localStorage.setItem('catani_cfg',JSON.stringify({url:'https://igjxeatnhgvnkmwtldxw.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA'}));
+  if(keyEl) keyEl.value = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjQ1NjksImV4cCI6MjA5MjY0MDU2OX0.YP9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA';
+  localStorage.setItem('catani_cfg',JSON.stringify({url:'https://igjxeatnhgvnkmwtldxw.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjQ1NjksImV4cCI6MjA5MjY0MDU2OX0.YP9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA'}));
 }
 
 async function checkSession(){
@@ -1611,8 +1611,8 @@ async function logout(){
 // ── CONFIG ──────────────────────────────────────────────────
 // Credentials hardcoded
 document.getElementById('sb-url').value='https://igjxeatnhgvnkmwtldxw.supabase.co';
-document.getElementById('sb-key').value='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA';
-localStorage.setItem('catani_cfg',JSON.stringify({url:'https://igjxeatnhgvnkmwtldxw.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA'}));
+document.getElementById('sb-key').value='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjQ1NjksImV4cCI6MjA5MjY0MDU2OX0.YP9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA';
+localStorage.setItem('catani_cfg',JSON.stringify({url:'https://igjxeatnhgvnkmwtldxw.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjQ1NjksImV4cCI6MjA5MjY0MDU2OX0.YP9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA'}));
 const today=new Date().toISOString().split('T')[0];
 ['a-fecha','g-fecha','co-fecha','lf-fecha','pv-hasta','pv-hist-hasta'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
 const now=new Date();
@@ -1620,7 +1620,7 @@ const now=new Date();
 
 function saveConfig(){localStorage.setItem('catani_cfg',JSON.stringify({url:document.getElementById('sb-url').value.trim(),key:document.getElementById('sb-key').value.trim()}));}
 function sbUrl(){ return 'https://igjxeatnhgvnkmwtldxw.supabase.co'; }
-function sbKey(){ return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA'; }
+function sbKey(){ return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjQ1NjksImV4cCI6MjA5MjY0MDU2OX0.YP9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA'; }
 
 async function sbPost(table,data){
   const res=await fetch(`${sbUrl()}/rest/v1/${table}`,{method:'POST',
