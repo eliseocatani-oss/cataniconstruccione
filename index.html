@@ -330,6 +330,7 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
   <nav class="nav">
     <div class="nav-section">Operaciones</div>
     <div class="ni active" onclick="tab('asistencia',this)"><span class="ic">⬡</span>Asistencia</div>
+    <div class="ni" onclick="tab('ver-asistencia',this)"><span class="ic">◈</span>Ver asistencia</div>
     <div class="ni" onclick="tab('gastos',this)"><span class="ic">◈</span>Gastos</div>
     <div class="nav-section">Contratos</div>
     <div class="ni" onclick="tab('certificacion',this)"><span class="ic">◉</span>Certificación</div>
@@ -432,6 +433,92 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
       </div>
     </div>
     <div id="a-empty" class="empty"><div class="empty-icon">⬡</div><p>elegí fecha y obra para cargar</p></div>
+  </div>
+</div>
+
+<!-- ══ VER ASISTENCIA ══ -->
+<div id="panel-ver-asistencia" class="panel">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div><h1>Ver asistencia</h1><p>// consultar · editar · eliminar registros</p></div>
+      <div class="breadcrumb">CATANI / <span>VER ASISTENCIA</span></div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Filtros</div>
+      <div class="row">
+        <div class="f" style="max-width:155px;"><label>Fecha desde</label><input type="date" id="va-desde"/></div>
+        <div class="f" style="max-width:155px;"><label>Fecha hasta</label><input type="date" id="va-hasta"/></div>
+        <div class="f" style="max-width:155px;"><label>Obra</label>
+          <select id="va-obra">
+            <option value="">Todas</option>
+            <option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option><option>FUNES</option><option>PIÑERO</option>
+          </select>
+        </div>
+        <div class="f" style="max-width:200px;"><label>Empleado</label>
+          <input type="text" id="va-emp" placeholder="buscar por nombre..."/>
+        </div>
+        <div class="f" style="max-width:140px;justify-content:flex-end;"><label>&nbsp;</label>
+          <button class="btn btn-gold" onclick="consultarAsistencia()">Buscar →</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="va-empty" class="empty"><div class="empty-icon">◈</div><p>seleccioná filtros y buscá</p></div>
+
+    <div id="va-res" style="display:none;">
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;" id="va-metrics"></div>
+      <div class="tbl-wrap">
+        <table class="tbl" id="va-tabla">
+          <thead><tr>
+            <th>Fecha</th><th>Obra</th><th>Empleado</th>
+            <th style="text-align:center;">Jornales</th>
+            <th style="text-align:center;">Transp.</th>
+            <th style="text-align:center;">H.Extra</th>
+            <th style="text-align:center;">Feriado</th>
+            <th style="text-align:right;">Total</th>
+            <th style="text-align:center;width:90px;">Acciones</th>
+          </tr></thead>
+          <tbody id="va-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL EDITAR ASISTENCIA ══ -->
+<div id="modal-edit-asist" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:var(--c1);border:1px solid var(--border);border-radius:16px;padding:24px;width:460px;max-width:95vw;">
+    <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;" id="ea-title">Editar registro</div>
+    <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:14px;" id="ea-info"></div>
+    <div class="grid2" style="gap:10px;">
+      <div class="f"><label>Jornales</label>
+        <select id="ea-jorn">
+          <option value="0">0</option><option value="0.5">½</option>
+          <option value="1">1</option><option value="1.5">1½</option><option value="2">2</option>
+        </select>
+      </div>
+      <div class="f"><label>Transporte</label>
+        <select id="ea-trans"><option value="0">No</option><option value="1">Sí</option></select>
+      </div>
+      <div class="f"><label>Horas extra</label>
+        <input type="number" id="ea-hextra" min="0" step="0.5" placeholder="0"/>
+      </div>
+      <div class="f"><label>Feriado</label>
+        <select id="ea-fer"><option value="0">No</option><option value="1">Sí</option></select>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--amber);font-family:var(--mono);margin-top:4px;margin-bottom:14px;">
+      ⚠ Los montos se recalcularán automáticamente con las tarifas vigentes del empleado.
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-gold" onclick="guardarEditAsist()" style="flex:1;">Guardar cambios</button>
+      <button class="btn btn-ghost" onclick="closeEditModal()" style="flex:1;">Cancelar</button>
+    </div>
+    <input type="hidden" id="ea-id"/>
+    <input type="hidden" id="ea-emp"/>
+    <input type="hidden" id="ea-fecha"/>
   </div>
 </div>
 
@@ -1707,6 +1794,123 @@ async function guardarAsistencia(){
   btn.textContent='Guardar asistencia';btn.disabled=false;
 }
 
+// ── VER ASISTENCIA ────────────────────────────────────────────
+async function consultarAsistencia(){
+  const desde = document.getElementById('va-desde').value;
+  const hasta = document.getElementById('va-hasta').value;
+  const obra  = document.getElementById('va-obra').value;
+  const emp   = document.getElementById('va-emp').value.trim();
+  if(!desde||!hasta){setStatus? null:null; alert('Seleccioná fechas.'); return;}
+  let qs = `fecha=gte.${desde}&fecha=lte.${hasta}&order=fecha.desc,obra,empleado`;
+  if(obra) qs += `&obra=eq.${encodeURIComponent(obra)}`;
+  if(emp)  qs += `&empleado=ilike.*${encodeURIComponent(emp)}*`;
+  try{
+    const data = await sbGet('asistencia', qs);
+    const div  = document.getElementById('va-res');
+    const tbody= document.getElementById('va-tbody');
+    tbody.innerHTML = '';
+
+    if(!data.length){
+      div.style.display='none';
+      document.getElementById('va-empty').style.display='block';
+      document.getElementById('va-empty').innerHTML='<div class="empty-icon">◈</div><p>sin registros para los filtros seleccionados</p>';
+      return;
+    }
+
+    // Metrics
+    const tot_jorn = data.reduce((s,r)=>s+(parseFloat(r.jornales)||0),0);
+    const tot_monto= data.reduce((s,r)=>s+(parseFloat(r.total)||0),0);
+    const obras_set = [...new Set(data.map(r=>r.obra))];
+    document.getElementById('va-metrics').innerHTML=`
+      <div class="metric"><div class="ml">Registros</div><div class="mv">${data.length}</div></div>
+      <div class="metric"><div class="ml">Jornales</div><div class="mv">${tot_jorn.toFixed(1)}</div></div>
+      <div class="metric"><div class="ml">Total MO</div><div class="mv" style="font-size:16px;color:var(--gold);">${pesos(tot_monto)}</div></div>
+      <div class="metric"><div class="ml">Obras</div><div class="mv">${obras_set.join(', ')}</div><div class="ms">${[...new Set(data.map(r=>r.empleado))].length} empleados</div></div>`;
+
+    // Table rows
+    data.forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML=`
+        <td class="mono" style="font-size:11px;">${r.fecha}</td>
+        <td style="font-size:11px;">${r.obra}</td>
+        <td style="font-weight:500;font-size:12px;">${r.empleado}</td>
+        <td class="mono" style="text-align:center;">${parseFloat(r.jornales)||0}</td>
+        <td style="text-align:center;">${r.transporte>0?'<span style="color:var(--green);">✓</span>':'<span style="color:var(--text3);">—</span>'}</td>
+        <td class="mono" style="text-align:center;">${parseFloat(r.h_extra)>0?`<span style="color:var(--gold2);">${r.h_extra}hs</span>`:'—'}</td>
+        <td style="text-align:center;">${r.feriado>0?'<span style="color:var(--amber);">✓</span>':'—'}</td>
+        <td class="mono" style="text-align:right;font-weight:600;color:var(--gold);">${pesos(r.total)}</td>
+        <td style="text-align:center;">
+          <div style="display:flex;gap:4px;justify-content:center;">
+            <button onclick="abrirEditAsist(${r.id},'${r.fecha}','${r.empleado}',${r.jornales||0},${r.transporte||0},${r.h_extra||0},${r.feriado||0})" 
+              class="btn btn-ghost btn-sm" style="height:26px;padding:0 8px;font-size:10px;">✏</button>
+            <button onclick="eliminarAsist(${r.id})" 
+              class="btn btn-sm" style="height:26px;padding:0 8px;font-size:10px;background:var(--red-bg);color:var(--red);border:none;">✕</button>
+          </div>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+
+    div.style.display='block';
+    document.getElementById('va-empty').style.display='none';
+  }catch(e){alert('Error: '+e.message);}
+}
+
+function abrirEditAsist(id, fecha, emp, jornales, trans, hextra, feriado){
+  document.getElementById('ea-id').value    = id;
+  document.getElementById('ea-emp').value   = emp;
+  document.getElementById('ea-fecha').value = fecha;
+  document.getElementById('ea-title').textContent = 'Editar — '+emp;
+  document.getElementById('ea-info').textContent  = fecha;
+  document.getElementById('ea-jorn').value   = jornales;
+  document.getElementById('ea-trans').value  = trans;
+  document.getElementById('ea-hextra').value = hextra||'';
+  document.getElementById('ea-fer').value    = feriado;
+  document.getElementById('modal-edit-asist').style.display='flex';
+}
+
+function closeEditModal(){
+  document.getElementById('modal-edit-asist').style.display='none';
+}
+
+async function guardarEditAsist(){
+  const id      = document.getElementById('ea-id').value;
+  const emp     = document.getElementById('ea-emp').value;
+  const jornales= parseFloat(document.getElementById('ea-jorn').value)||0;
+  const trans   = parseInt(document.getElementById('ea-trans').value)||0;
+  const hextra  = parseFloat(document.getElementById('ea-hextra').value)||0;
+  const feriado = parseInt(document.getElementById('ea-fer').value)||0;
+
+  // Get employee tarifas
+  try{
+    const empData = await sbGet('empleados',`nombre=eq.${encodeURIComponent(emp)}&select=jornal,transporte,hextra,feriado`);
+    const t = empData[0]||{jornal:0,transporte:0,hextra:0,feriado:0};
+    const jornal_pesos    = Math.round(jornales*(t.jornal||0));
+    const transporte_pesos= Math.round(trans&&(jornales>0)?t.transporte||0:0);
+    const hextra_pesos    = Math.round(hextra*(t.hextra||0));
+    const feriado_pesos   = Math.round(feriado?(t.feriado||0):0);
+    const total           = jornal_pesos+transporte_pesos+hextra_pesos+feriado_pesos;
+
+    const updates = {jornales,transporte:trans,h_extra:hextra,feriado,
+      jornal_pesos,transporte_pesos,hextra_pesos,feriado_pesos,total};
+
+    await sbPatch('asistencia',id,updates);
+    closeEditModal();
+    consultarAsistencia();
+  }catch(e){alert('Error: '+e.message);}
+}
+
+async function eliminarAsist(id){
+  if(!confirm('¿Eliminar este registro de asistencia? Esta acción no se puede deshacer.'))return;
+  try{
+    const res=await fetch(`${sbUrl()}/rest/v1/asistencia?id=eq.${id}`,{
+      method:'DELETE',
+      headers:{'apikey':sbKey(),'Authorization':`Bearer ${sbKey()}`}
+    });
+    if(!res.ok)throw new Error(res.statusText);
+    consultarAsistencia();
+  }catch(e){alert('Error: '+e.message);}
+}
+
 // ── GASTOS ──────────────────────────────────────────────────
 async function guardarGasto(){
   const fecha=document.getElementById('g-fecha').value,obra=document.getElementById('g-obra').value,monto=parseFloat(document.getElementById('g-monto').value);
@@ -1940,6 +2144,10 @@ function limpiarEmp(){
   document.getElementById('e-activo').value='ACTIVO';
   document.getElementById('e-alta').value=today;
 document.getElementById('pl-fecha').value=today;
+// Default dates for ver-asistencia: current week
+const _lunes = new Date(); _lunes.setDate(_lunes.getDate()-_lunes.getDay()+1);
+document.getElementById('va-desde').value = _lunes.toISOString().split('T')[0];
+document.getElementById('va-hasta').value = today;
   ['e-baja','e-reingreso','e-segunda-baja'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('e-id').value='';
   document.getElementById('emp-historial').style.display='none';
@@ -2570,9 +2778,9 @@ function renderPagos(){
           oninput="pvCalc(${i})" ${!tieneTarjeta?'disabled title="Sin cuenta bancaria"':''}/>
       </td>
       <td style="padding:4px 8px;">
-        <input type="number" id="pv-e-${i}" value=""  placeholder="0"
-          style="width:100%;height:28px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--gold);font-family:var(--mono);font-size:12px;text-align:right;padding:0 8px;outline:none;"
-          oninput="pvCalc(${i})"/>
+        <input type="number" id="pv-e-${i}" value="" placeholder="auto"
+          style="width:100%;height:28px;background:rgba(232,160,32,.06);border:1px solid rgba(232,160,32,.2);border-radius:4px;color:var(--gold);font-family:var(--mono);font-size:12px;text-align:right;padding:0 8px;outline:none;"
+          oninput="this.dataset.autoset='manual';pvCalc(${i})"/>
       </td>
       <td class="mono" style="text-align:right;font-size:11px;font-weight:600;" id="pv-tot-${i}">$0</td>
       <td style="text-align:center;">
@@ -2591,18 +2799,30 @@ function pvToggle(i, cb){
 
 function pvCalc(i){
   const q = parseFloat(document.getElementById(`pv-q-${i}`)?.value)||0;
-  const e = parseFloat(document.getElementById(`pv-e-${i}`)?.value)||0;
+  // Auto-calculate efectivo = ganado - quincena (if ganado > 0)
+  const ganado = pvEmpleados[i].ganado||0;
+  let e = parseFloat(document.getElementById(`pv-e-${i}`)?.value);
+  if(isNaN(e) && ganado > 0 && q > 0){
+    // Auto-suggest efectivo
+    e = Math.max(0, ganado - q);
+    const eEl = document.getElementById(`pv-e-${i}`);
+    if(eEl && eEl.dataset.autoset !== 'manual') eEl.value = e || '';
+  }
+  e = parseFloat(document.getElementById(`pv-e-${i}`)?.value)||0;
   pvEmpleados[i].quinc = q;
   pvEmpleados[i].efec  = e;
   const tot = q + e;
   const totEl = document.getElementById(`pv-tot-${i}`);
-  if(totEl) totEl.textContent = pesos(tot);
-  // Estado
+  if(totEl){
+    totEl.textContent = pesos(tot);
+    // Highlight if efectivo > 0
+    totEl.style.color = e > 0 ? 'var(--gold2)' : 'var(--gold)';
+  }
   const estEl = document.getElementById(`pv-est-${i}`);
   if(estEl){
     if(!pvEmpleados[i].pagado){estEl.textContent='Salteado';estEl.className='badge badge-err';return;}
     if(tot === 0){estEl.textContent='Pendiente';estEl.className='badge badge-warn';return;}
-    if(q > 0 && e > 0){estEl.textContent='Banco+Efec';estEl.className='badge badge-info';}
+    if(q > 0 && e > 0){estEl.textContent='Banco+Efec.';estEl.className='badge badge-info';}
     else if(q > 0){estEl.textContent='Solo banco';estEl.className='badge badge-ok';}
     else{estEl.textContent='Solo efec.';estEl.className='badge badge-warn';}
   }
@@ -2612,9 +2832,17 @@ function pvCalc(i){
 function pvUpdateTotals(){
   const tq = pvEmpleados.reduce((s,e)=>s+e.quinc,0);
   const te = pvEmpleados.reduce((s,e)=>s+e.efec,0);
+  const tg = pvEmpleados.reduce((s,e)=>s+e.ganado,0);
   document.getElementById('pv-total-quinc').textContent = pesos(tq);
   document.getElementById('pv-total-efec').textContent  = pesos(te);
   document.getElementById('pv-total-gen').textContent   = pesos(tq+te);
+  // Efectivo alert
+  const diff = tg - (tq+te);
+  const genEl = document.getElementById('pv-total-gen');
+  if(genEl && Math.abs(diff)>100){
+    genEl.title = `Ganado total: ${pesos(tg)} · Diferencia: ${pesos(diff)}`;
+    genEl.style.color = diff > 0 ? 'var(--amber)' : 'var(--green)';
+  }
 }
 
 async function guardarPagos(){
