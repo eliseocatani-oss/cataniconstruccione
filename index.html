@@ -51,6 +51,45 @@
 html,body{height:100%;overflow:hidden;} /* shell handles scroll */
 body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13px;line-height:1.5;}
 
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+  .shell{flex-direction:column;}
+  .sb{width:100%;height:auto;flex-direction:row;flex-wrap:wrap;overflow-x:auto;padding:6px 8px;gap:4px;border-right:none;border-bottom:1px solid var(--border);}
+  .sb-logo{display:none;}
+  .nav-section{display:none;}
+  .ni{padding:6px 10px;border-radius:6px;font-size:10px;white-space:nowrap;flex-shrink:0;}
+  .ni .ic{display:none;}
+  .sb-cfg{display:none;}
+  .main{height:calc(100vh - 52px);height:calc(100dvh - 52px);}
+  .panel{padding:10px;}
+  .topbar{padding:10px 12px 0;}
+  .topbar h1{font-size:16px;}
+  .topbar p{display:none;}
+  .breadcrumb{display:none;}
+  .card{padding:12px;}
+  .row{flex-wrap:wrap;gap:8px;}
+  .f{min-width:140px;}
+  .grid2{grid-template-columns:1fr;}
+  .metrics{grid-template-columns:1fr 1fr;}
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .tbl{font-size:11px;}
+  .tbl th,.tbl td{padding:6px 8px;}
+  /* Asistencia table mobile */
+  .at{font-size:10px;}
+  .ri{padding:5px 8px;gap:5px;}
+  .en{min-width:100px;font-size:11px;}
+  .jb{width:26px;height:24px;font-size:10px;}
+  /* Hide less important columns on mobile */
+  @media (max-width:480px){
+    .hide-xs{display:none!important;}
+  }
+}
+.sb.sb-open{display:flex!important;}
+@media (max-width: 480px){
+  .metrics{grid-template-columns:1fr;}
+  .f{min-width:100%;}
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -374,6 +413,7 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
 <!-- ══ ASISTENCIA ══ -->
 <div id="panel-asistencia" class="panel active">
   <div class="topbar">
+    <button id="mobile-menu-btn" onclick="toggleMobileMenu()" style="display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px 8px;margin-right:8px;">☰</button>
     <div class="topbar-inner">
       <div><h1>Asistencia diaria</h1><p>// registro de jornales · lun–vie 9hs · sáb–dom 5hs</p></div>
       <div class="breadcrumb">CATANI / <span>ASISTENCIA</span></div>
@@ -1505,9 +1545,7 @@ function saveCfgFromLogin(){
 let _sbClient = null;
 function getSBClient(){
   if(_sbClient) return _sbClient;
-  const u = sbUrl(), k = sbKey();
-  if(!u || !k) return null;
-  _sbClient = window.supabase.createClient(u, k);
+  _sbClient = window.supabase.createClient('https://igjxeatnhgvnkmwtldxw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA');
   return _sbClient;
 }
 
@@ -1531,16 +1569,12 @@ async function doLogin(){
 }
 
 function initLoginScreen(){
-  const cfg = JSON.parse(localStorage.getItem('catani_cfg')||'{}');
+  // Credentials hardcoded - pre-fill for reference
   const urlEl = document.getElementById('login-sb-url');
   const keyEl = document.getElementById('login-sb-key');
-  if(urlEl && cfg.url) urlEl.value = cfg.url;
-  if(keyEl && cfg.key) keyEl.value = cfg.key;
-  // Auto-expand config if not configured
-  if(!cfg.url || !cfg.key){
-    document.getElementById('login-cfg-panel').style.display = 'block';
-    document.getElementById('login-cfg-arrow').textContent   = '▼';
-  }
+  if(urlEl) urlEl.value = 'https://igjxeatnhgvnkmwtldxw.supabase.co';
+  if(keyEl) keyEl.value = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA';
+  localStorage.setItem('catani_cfg',JSON.stringify({url:'https://igjxeatnhgvnkmwtldxw.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA'}));
 }
 
 async function checkSession(){
@@ -1575,17 +1609,18 @@ async function logout(){
 
 
 // ── CONFIG ──────────────────────────────────────────────────
-const cfg=JSON.parse(localStorage.getItem('catani_cfg')||'{}');
-document.getElementById('sb-url').value=cfg.url||'';
-document.getElementById('sb-key').value=cfg.key||'';
+// Credentials hardcoded
+document.getElementById('sb-url').value='https://igjxeatnhgvnkmwtldxw.supabase.co';
+document.getElementById('sb-key').value='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA';
+localStorage.setItem('catani_cfg',JSON.stringify({url:'https://igjxeatnhgvnkmwtldxw.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA'}));
 const today=new Date().toISOString().split('T')[0];
 ['a-fecha','g-fecha','co-fecha','lf-fecha','pv-hasta','pv-hist-hasta'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
 const now=new Date();
 ['c-desde','c-hasta'].forEach(id=>{document.getElementById(id).value=today;});
 
 function saveConfig(){localStorage.setItem('catani_cfg',JSON.stringify({url:document.getElementById('sb-url').value.trim(),key:document.getElementById('sb-key').value.trim()}));}
-function sbUrl(){let u=document.getElementById('sb-url').value.trim();return u.replace(/\/+$/,'').replace(/\/rest\/v1.*$/,'');}
-function sbKey(){return document.getElementById('sb-key').value.trim();}
+function sbUrl(){ return 'https://igjxeatnhgvnkmwtldxw.supabase.co'; }
+function sbKey(){ return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnanhlYXRuaGd2bmttd3RsZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2OTI2MTEsImV4cCI6MjA1OTI2ODYxMX0.Y_P9LDMCFBpymdjrEfRMLwrm99xuLkuf3pqvuLMG_cDA'; }
 
 async function sbPost(table,data){
   const res=await fetch(`${sbUrl()}/rest/v1/${table}`,{method:'POST',
@@ -3979,6 +4014,20 @@ function buildPlanillaHTML(obra, fechaLarga, fechaCorta, turno, emps, extra){
 
 </body></html>`;
 }
+
+// ── MOBILE ────────────────────────────────────────────────────
+function checkMobile(){
+  const isMobile = window.innerWidth <= 768;
+  const menuBtn = document.getElementById('mobile-menu-btn');
+  if(menuBtn) menuBtn.style.display = isMobile ? 'block' : 'none';
+}
+function toggleMobileMenu(){
+  const sb = document.querySelector('.sb');
+  if(!sb) return;
+  sb.classList.toggle('sb-open');
+}
+window.addEventListener('resize', checkMobile);
+checkMobile();
 
 // ── INIT ──────────────────────────────────────────────────
 addPago();
