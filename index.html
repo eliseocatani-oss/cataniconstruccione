@@ -411,13 +411,16 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
               <th>Empleado</th>
               <th style="width:175px;">Jornales</th>
               <th style="width:60px;text-align:center;">Transp.</th>
-              <th style="width:68px;text-align:center;">Hs.ext</th>
+              <th style="width:68px;text-align:center;" title="Horas extra trabajadas">H.Extra</th>
               <th style="width:60px;text-align:center;">Feriado</th>
               <th style="width:130px;">Obra del día</th>
               <th style="width:100px;text-align:right;">Total</th>
             </tr></thead>
             <tbody id="a-tbody"></tbody>
           </table>
+        </div>
+        <div style="padding:6px 12px;font-size:10px;color:var(--text3);font-family:var(--mono);border-top:1px solid var(--border);background:var(--c2);">
+          💡 H.Extra: ingresá la cantidad de horas extra trabajadas ese día · T: empleado en licencia que cobra solo transporte
         </div>
       </div>
       <div class="afoot">
@@ -1600,7 +1603,10 @@ function renderAsist(){
         <button class="jb" onclick="setSoloTrans(${i},this)" title="Solo transporte" style="color:var(--ice);border-color:rgba(123,175,212,.3);">T</button>
       </div>
       <div style="text-align:center;"><label class="tog"><input type="checkbox" id="t${i}-tr" ${emp._trans?'checked':''} onchange="cr(${i})"><span class="tsl"></span></label></div>
-      <div style="text-align:center;"><input class="hi" type="number" id="t${i}-hx" value="0" min="0" step="0.5" onchange="cr(${i})"/></div>
+      <div style="text-align:center;position:relative;">
+        <input class="hi" type="number" id="t${i}-hx" value="" min="0" step="0.5" onchange="cr(${i})"
+          placeholder="0" style="width:48px;height:26px;border:1px solid var(--border);border-radius:4px;background:var(--c2);color:var(--text);font-family:var(--mono);font-size:12px;text-align:center;padding:0 3px;outline:none;"/>
+      </div>
       <div style="text-align:center;"><label class="tog"><input type="checkbox" id="t${i}-fe" onchange="cr(${i})"><span class="tsl"></span></label></div>
       <select id="t${i}-obra" onchange="cr(${i})" style="height:22px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text3);font-size:9px;padding:0 3px;outline:none;max-width:110px;">${obraOpts}</select>
       <div class="tp" id="t${i}-tot">$0</div>
@@ -1656,7 +1662,15 @@ function cr(i){
   const total=j*(emp.jornal||0)+transMonto+hx*(emp.hextra||0)+(fe?emp.feriado||0:0);
   emp._soloTrans=emp._soloTrans||false;
   emp._total=total;
-  const el=document.getElementById(`t${i}-tot`);if(el)el.textContent=pesos(total);
+  const el=document.getElementById(`t${i}-tot`);if(el){
+    el.textContent=pesos(total);
+    // Highlight if hextra
+    if(hx>0){el.style.color='var(--gold2)';el.style.background='rgba(245,192,90,.12)';}
+    else{el.style.color='var(--gold)';el.style.background='rgba(232,160,32,.08)';}
+  }
+  // Show hextra badge on row
+  const hxEl=document.getElementById(`t${i}-hx`);
+  if(hxEl){hxEl.style.borderColor=hx>0?'rgba(245,192,90,.5)':'var(--border)';hxEl.style.color=hx>0?'var(--gold2)':'var(--text)';}
   updateTotalDia();
 }
 function updateCount(){const n=empData.filter(e=>e._j>0).length;document.getElementById('a-count').textContent=n+' presente'+(n!==1?'s':'');}
@@ -2501,18 +2515,23 @@ async function cargarPagos(){
     if(!emps.length){alert(`Sin empleados activos en ${obra}.`);btn.textContent='→ Cargar empleados';btn.disabled=false;return;}
 
     // Get asistencia del período para calcular lo ganado
+    // Query by fecha only - then filter by empleado name to catch cross-obra records
+    const nombresIn = emps.map(e=>`"${e.nombre}"`).join(',');
     const asist = await sbGet('asistencia',
-      `obra=eq.${encodeURIComponent(obra)}&fecha=gte.${desde}&fecha=lte.${hasta}&select=empleado,total`);
+      `fecha=gte.${desde}&fecha=lte.${hasta}&empleado=in.(${nombresIn})&select=empleado,total,obra`);
 
-    // Map totales por empleado
+    // Map totales por empleado (sin importar en qué obra trabajó ese día)
     const totMap = {};
+    const obraMap = {};
     (Array.isArray(asist)?asist:[]).forEach(r=>{
       totMap[r.empleado] = (totMap[r.empleado]||0) + (parseFloat(r.total)||0);
+      obraMap[r.empleado] = r.obra; // última obra registrada
     });
 
     pvEmpleados = emps.map(e=>({
       ...e,
       ganado: totMap[e.nombre] || 0,
+      obra_trabajada: obraMap[e.nombre] || obra,
       quinc: 0,
       efec: 0,
       pagado: true,
@@ -2535,7 +2554,10 @@ function renderPagos(){
     tr.innerHTML = `
       <td><input type="checkbox" checked id="pv-chk-${i}" style="accent-color:var(--gold);width:14px;height:14px;" onchange="pvToggle(${i},this)"/></td>
       <td style="font-weight:500;font-size:12px;">${emp.nombre}</td>
-      <td style="font-size:10px;color:var(--text3);font-family:var(--mono);">${emp.cuenta_macro||'—'}</td>
+      <td style="font-size:10px;color:var(--text3);font-family:var(--mono);">
+        ${emp.cuenta_macro||'—'}
+        ${emp.obra_trabajada && emp.obra_trabajada!==emp.obra?`<div style="font-size:9px;color:var(--amber);">↳ trabajó en ${emp.obra_trabajada}</div>`:''}
+      </td>
       <td style="text-align:center;">
         ${tieneTarjeta
           ? '<span class="badge badge-ok" style="font-size:9px;">✓ Macro</span>'
@@ -3489,14 +3511,14 @@ function buildPlanillaHTML(obra, fechaLarga, fechaCorta, turno, emps, extra){
         <td class="nombre">${e.nombre}</td>
         <td style="padding:0;width:4cm;">
           <div style="display:flex;height:36pt;">
-            <div style="width:1.6cm;border-right:0.5px solid #CBD5E0;background:#F0F8FF;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#8FA0BC;flex-shrink:0;">__:__</div>
-            <div style="flex:1;background:#FFFDF7;position:relative;"><div style="position:absolute;bottom:3px;left:4px;right:4px;border-bottom:0.5px solid #CBD5E0;"></div><span style="position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:6pt;color:#CBD5E0;">firma</span></div>
+            <div style="width:1.6cm;border-right:0.5px solid #999;background:#e8e8e8;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#333;flex-shrink:0;">__:__</div>
+            <div style="flex:1;background:#fff;position:relative;"><div style="position:absolute;bottom:3px;left:4px;right:4px;border-bottom:0.5px solid #999;"></div><span style="position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:6pt;color:#aaa;">firma</span></div>
           </div>
         </td>
         <td style="padding:0;width:4cm;">
           <div style="display:flex;height:36pt;">
-            <div style="width:1.6cm;border-right:0.5px solid #CBD5E0;background:#F0F8FF;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#8FA0BC;flex-shrink:0;">__:__</div>
-            <div style="flex:1;background:#FFFDF7;position:relative;"><div style="position:absolute;bottom:3px;left:4px;right:4px;border-bottom:0.5px solid #CBD5E0;"></div><span style="position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:6pt;color:#CBD5E0;">firma</span></div>
+            <div style="width:1.6cm;border-right:0.5px solid #999;background:#e8e8e8;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#333;flex-shrink:0;">__:__</div>
+            <div style="flex:1;background:#fff;position:relative;"><div style="position:absolute;bottom:3px;left:4px;right:4px;border-bottom:0.5px solid #999;"></div><span style="position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:6pt;color:#aaa;">firma</span></div>
           </div>
         </td>
       </tr>`),
@@ -3506,14 +3528,14 @@ function buildPlanillaHTML(obra, fechaLarga, fechaCorta, turno, emps, extra){
         <td class="nombre" style="color:#CBD5E0;font-style:italic;font-size:8pt;">_______________________________</td>
         <td style="padding:0;width:4cm;">
           <div style="display:flex;height:36pt;">
-            <div style="width:1.6cm;border-right:0.5px solid #CBD5E0;background:#F8FAFC;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#CBD5E0;flex-shrink:0;">__:__</div>
-            <div style="flex:1;background:#FAFAFA;position:relative;"><div style="position:absolute;bottom:3px;left:4px;right:4px;border-bottom:0.5px solid #E2E8F0;"></div><span style="position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:6pt;color:#E2E8F0;">firma</span></div>
+            <div style="width:1.6cm;border-right:0.5px solid #ccc;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#aaa;flex-shrink:0;">__:__</div>
+            <div style="flex:1;background:#fafafa;position:relative;"><div style="position:absolute;bottom:3px;left:4px;right:4px;border-bottom:0.5px solid #ccc;"></div><span style="position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:6pt;color:#ccc;">firma</span></div>
           </div>
         </td>
         <td style="padding:0;width:4cm;">
           <div style="display:flex;height:36pt;">
-            <div style="width:1.6cm;border-right:0.5px solid #CBD5E0;background:#F8FAFC;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#CBD5E0;flex-shrink:0;">__:__</div>
-            <div style="flex:1;background:#FAFAFA;position:relative;"><div style="position:absolute;bottom:3px;left:4px;right:4px;border-bottom:0.5px solid #E2E8F0;"></div><span style="position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:6pt;color:#E2E8F0;">firma</span></div>
+            <div style="width:1.6cm;border-right:0.5px solid #ccc;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#aaa;flex-shrink:0;">__:__</div>
+            <div style="flex:1;background:#fafafa;position:relative;"><div style="position:absolute;bottom:3px;left:4px;right:4px;border-bottom:0.5px solid #ccc;"></div><span style="position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:6pt;color:#ccc;">firma</span></div>
           </div>
         </td>
       </tr>`)
@@ -3524,39 +3546,35 @@ function buildPlanillaHTML(obra, fechaLarga, fechaCorta, turno, emps, extra){
 <style>
   @page{size:A4 portrait;margin:1.2cm 1.5cm 1.5cm;}
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:Arial,sans-serif;font-size:9pt;color:#1a1f2e;background:#fff;}
-  .header{display:flex;align-items:center;gap:14px;padding:10px 12px;border:2px solid #1B3A5C;border-radius:6px;margin-bottom:8px;background:#fff;}
+  body{font-family:Arial,sans-serif;font-size:9pt;color:#000;background:#fff;}
+  .header{display:flex;align-items:center;gap:14px;padding:10px 12px;border:2px solid #000;border-radius:6px;margin-bottom:8px;background:#fff;}
   .header-main{flex:1;}
-  .company-name{font-size:15pt;font-weight:bold;color:#1B3A5C;line-height:1.1;}
-  .doc-title{font-size:11pt;font-weight:bold;color:#E8A020;margin-top:2px;}
-  .company-sub{font-size:7.5pt;color:#8FA0BC;margin-top:1px;}
+  .company-name{font-size:15pt;font-weight:bold;color:#000;line-height:1.1;}
+  .doc-title{font-size:11pt;font-weight:bold;color:#000;margin-top:2px;letter-spacing:.5px;}
+  .company-sub{font-size:7.5pt;color:#555;margin-top:1px;}
   .header-info{display:grid;grid-template-columns:auto auto;gap:3px 10px;font-size:8.5pt;min-width:160px;}
-  .header-info .lbl{color:#8FA0BC;font-weight:bold;text-align:right;}
-  .header-info .val{color:#1a1f2e;font-weight:bold;}
-  .header-info .val.blank{color:#CBD5E0;font-style:italic;}
-  .gold-line{height:2.5px;background:linear-gradient(90deg,#E8A020,#FFD070,#E8A020);margin:7px 0;}
-  .instructions{font-size:7pt;color:#8FA0BC;margin-bottom:6px;display:flex;justify-content:space-between;}
-  .instructions .right{color:#E8A020;}
+  .header-info .lbl{color:#555;font-weight:bold;text-align:right;}
+  .header-info .val{color:#000;font-weight:bold;}
+  .header-info .val.blank{color:#aaa;font-style:italic;}
+  .gold-line{height:2px;background:#000;margin:7px 0;}
+  .instructions{font-size:7pt;color:#555;margin-bottom:6px;display:flex;justify-content:space-between;}
+  .instructions .right{color:#000;font-weight:bold;}
   
   /* TABLE */
   table{width:100%;border-collapse:collapse;margin-bottom:10px;}
-  thead tr{background:#1B3A5C;}
-  thead th{color:#fff;font-size:8pt;font-weight:bold;padding:5px 4px;border:1px solid #2E75B6;}
+  thead tr{background:#000;}
+  thead th{color:#fff;font-size:8pt;font-weight:bold;padding:5px 4px;border:1px solid #000;}
   thead th.left{text-align:left;padding-left:8px;}
   thead th.center{text-align:center;}
-  
-  /* Sub-header row for HORA / FIRMA inside entrada/salida */
-  .sub-header{background:#0F2440;}
-  .sub-header th{font-size:7pt;color:#8FA0BC;padding:3px 2px;border:1px solid #2E75B6;text-align:center;}
-  
+  .sub-header{background:#333;}
+  .sub-header th{font-size:7pt;color:#ddd;padding:3px 2px;border:1px solid #000;text-align:center;}
   tbody tr.even{background:#fff;}
-  tbody tr.odd{background:#F5F7FA;}
-  tbody tr.extra{background:#FAFBFC;}
-  tbody td{border:0.5px solid #CBD5E0;vertical-align:middle;}
-  
+  tbody tr.odd{background:#f0f0f0;}
+  tbody tr.extra{background:#f8f8f8;}
+  tbody td{border:0.5px solid #999;vertical-align:middle;}
   td.num{text-align:center;font-size:8pt;width:0.8cm;padding:2px;}
   td.nombre{font-size:9pt;font-weight:500;padding:0 6px;width:auto;}
-  td.gray{color:#CBD5E0;}
+  td.gray{color:#aaa;}
 
   /* Entrada / Salida split cells */
   .entry-group{display:table;width:100%;height:100%;border-collapse:collapse;}
@@ -3600,20 +3618,20 @@ function buildPlanillaHTML(obra, fechaLarga, fechaCorta, turno, emps, extra){
 <div class="header">
   <!-- Logo Catani -->
   <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;">
-    <img src="${LOGOS_CATANI}" style="width:56px;height:56px;object-fit:contain;background:#0F2440;border-radius:6px;padding:4px;"/>
+    <img src="${LOGOS_CATANI}" style="width:56px;height:56px;object-fit:contain;background:#000;border-radius:6px;padding:4px;filter:brightness(1) grayscale(100%);"/>
     <span style="font-size:6pt;color:#8FA0BC;font-family:Arial;text-align:center;max-width:60px;">CATANI<br>CONSTR.</span>
   </div>
-  <div style="width:0.5px;background:#CBD5E0;margin:0 10px;align-self:stretch;"></div>
+  <div style="width:0.5px;background:#999;margin:0 10px;align-self:stretch;"></div>
   <!-- Info central -->
   <div class="header-main">
     <div class="company-name">CATANI CONSTRUCCIONES</div>
     <div class="company-sub">Empresa de Construcción e Ingeniería Civil</div>
     <div class="doc-title">PLANILLA DE ASISTENCIA DIARIA</div>
     <div style="margin-top:4px;font-size:7.5pt;color:#8FA0BC;">
-      Contratista de: <strong style="color:#1B3A5C;">${(LOGOS_CLIENTE[obra]||{nombre:'—'}).nombre}</strong>
+      Contratista de: <strong style="color:#000;">${(LOGOS_CLIENTE[obra]||{nombre:'—'}).nombre}</strong>
     </div>
   </div>
-  <div style="width:0.5px;background:#CBD5E0;margin:0 10px;align-self:stretch;"></div>
+  <div style="width:0.5px;background:#999;margin:0 10px;align-self:stretch;"></div>
   <!-- Info obra -->
   <div class="header-info">
     <div class="lbl">OBRA:</div><div class="val">${obra}</div>
@@ -3621,10 +3639,10 @@ function buildPlanillaHTML(obra, fechaLarga, fechaCorta, turno, emps, extra){
     <div class="lbl">TURNO:</div><div class="val">${turno}</div>
     <div class="lbl">COMITENTE:</div><div class="val" style="font-size:7pt;">${(LOGOS_CLIENTE[obra]||{nombre:'—'}).nombre}</div>
   </div>
-  <div style="width:0.5px;background:#CBD5E0;margin:0 10px;align-self:stretch;"></div>
+  <div style="width:0.5px;background:#999;margin:0 10px;align-self:stretch;"></div>
   <!-- Logo cliente -->
   <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;">
-    ${LOGOS_CLIENTE[obra]?`<img src="${LOGOS_CLIENTE[obra].logo}" style="width:70px;height:56px;object-fit:contain;filter:invert(1) brightness(0.4);background:#fff;border-radius:4px;padding:4px;border:1px solid #CBD5E0;"/>`:'<div style="width:70px;height:56px;border:1px dashed #CBD5E0;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7pt;color:#CBD5E0;">SIN LOGO</div>'}
+    ${LOGOS_CLIENTE[obra]?`<img src="${LOGOS_CLIENTE[obra].logo}" style="width:70px;height:56px;object-fit:contain;filter:grayscale(100%) brightness(0) invert(0);background:#fff;border-radius:4px;padding:4px;border:1px solid #999;"/>`:'<div style="width:70px;height:56px;border:1px dashed #999;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7pt;color:#999;">SIN LOGO</div>'}
   </div>
 </div>
 
