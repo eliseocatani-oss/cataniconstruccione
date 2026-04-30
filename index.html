@@ -505,8 +505,12 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
       <div class="f"><label>Horas extra</label>
         <input type="number" id="ea-hextra" min="0" step="0.5" placeholder="0"/>
       </div>
-      <div class="f"><label>Feriado</label>
-        <select id="ea-fer"><option value="0">No</option><option value="1">Sí</option></select>
+      <div class="f"><label>Feriado (jornales)</label>
+        <select id="ea-fer">
+          <option value="0">0 — Sin feriado</option>
+          <option value="0.5">½ jornal</option>
+          <option value="1">1 jornal</option>
+        </select>
       </div>
     </div>
     <div style="font-size:10px;color:var(--amber);font-family:var(--mono);margin-top:4px;margin-bottom:14px;">
@@ -892,59 +896,47 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
 <div id="panel-pagos" class="panel">
   <div class="topbar">
     <div class="topbar-inner">
-      <div><h1>Pagos del viernes</h1><p>// quincena banco · complemento efectivo · control por empleado</p></div>
+      <div><h1>Pagos del viernes</h1><p>// sobres semanales · banco + efectivo</p></div>
       <div class="breadcrumb">CATANI / <span>PAGOS</span></div>
     </div>
   </div>
   <div class="content">
+
+    <!-- Config -->
     <div class="card">
-      <div class="card-title">Configurar período</div>
+      <div class="card-title">Período</div>
       <div class="row">
-        <div class="f" style="max-width:155px;"><label>Período desde</label><input type="date" id="pv-desde"/></div>
-        <div class="f" style="max-width:155px;"><label>Período hasta</label><input type="date" id="pv-hasta"/></div>
+        <div class="f" style="max-width:155px;"><label>Desde</label><input type="date" id="pv-desde"/></div>
+        <div class="f" style="max-width:155px;"><label>Hasta</label><input type="date" id="pv-hasta"/></div>
         <div class="f" style="max-width:155px;"><label>Obra</label>
           <select id="pv-obra">
             <option value="">— elegir —</option>
             <option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option><option>FUNES</option><option>PIÑERO</option>
           </select>
         </div>
-        <div class="f" style="max-width:170px;justify-content:flex-end;"><label>&nbsp;</label>
+        <div class="f" style="max-width:160px;justify-content:flex-end;"><label>&nbsp;</label>
           <button class="btn btn-nav" onclick="cargarPagos()">→ Cargar empleados</button>
         </div>
       </div>
     </div>
 
-    <div id="pv-main" style="display:none;">
-      <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);">
-          <div class="card-title" style="margin:0;">Empleados del período</div>
-          <div style="display:flex;gap:16px;font-size:10px;font-family:var(--mono);color:var(--text3);">
-            <span>Total quincena: <span id="pv-total-quinc" style="color:var(--ice);">$0</span></span>
-            <span>Total efectivo: <span id="pv-total-efec" style="color:var(--gold);">$0</span></span>
-            <span>Total general: <span id="pv-total-gen" style="color:var(--green);">$0</span></span>
-          </div>
-        </div>
-        <div style="overflow-x:auto;">
-          <table class="tbl" id="pv-tabla">
-            <thead><tr>
-              <th style="width:28px;"></th>
-              <th>Empleado</th>
-              <th style="width:120px;">Cuenta Macro</th>
-              <th style="width:80px;text-align:center;">Tarjeta</th>
-              <th style="width:160px;text-align:right;">Lo ganado (calc.)</th>
-              <th style="width:160px;text-align:right;">Quincena banco ($)</th>
-              <th style="width:160px;text-align:right;">Efectivo ($)</th>
-              <th style="width:100px;text-align:right;">Total</th>
-              <th style="width:90px;text-align:center;">Estado</th>
-            </tr></thead>
-            <tbody id="pv-tbody"></tbody>
-          </table>
+    <!-- Totales por obra -->
+    <div id="pv-por-obra" style="display:none;margin-bottom:12px;"></div>
+
+    <!-- Cards de empleados -->
+    <div id="pv-cards" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);" id="pv-cards-label">Empleados</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="pvMarcarTodos(true)">✓ Todos</button>
+          <button class="btn btn-ghost btn-sm" onclick="pvMarcarTodos(false)">✕ Ninguno</button>
         </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-gold" onclick="guardarPagos()">Guardar pagos</button>
+      <div id="pv-cards-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;"></div>
+      <div style="margin-top:14px;display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-gold" style="max-width:220px;" onclick="guardarPagos()">Guardar todos los pagos</button>
         <button class="btn btn-ghost btn-sm" onclick="resetPagos()">Cancelar</button>
-        <div id="pv-st" class="st"></div>
+        <div id="pv-st" class="st" style="flex:1;"></div>
       </div>
     </div>
 
@@ -952,7 +944,7 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
 
     <!-- Historial -->
     <div class="card" style="margin-top:12px;">
-      <div class="card-title">Consultar pagos anteriores</div>
+      <div class="card-title">Historial de pagos</div>
       <div class="row" style="margin-bottom:10px;">
         <div class="f" style="max-width:155px;"><label>Desde</label><input type="date" id="pv-hist-desde"/></div>
         <div class="f" style="max-width:155px;"><label>Hasta</label><input type="date" id="pv-hist-hasta"/></div>
@@ -961,7 +953,7 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
             <option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option><option>FUNES</option><option>PIÑERO</option>
           </select>
         </div>
-        <div class="f" style="max-width:140px;justify-content:flex-end;"><label>&nbsp;</label>
+        <div class="f" style="max-width:130px;justify-content:flex-end;"><label>&nbsp;</label>
           <button class="btn btn-nav" onclick="consultarPagos()">Consultar</button>
         </div>
       </div>
@@ -1856,6 +1848,9 @@ async function consultarAsistencia(){
 }
 
 function abrirEditAsist(id, fecha, emp, jornales, trans, hextra, feriado){
+  // Normalize feriado to closest option
+  const ferOpts = [0, 0.5, 1];
+  const ferVal = ferOpts.reduce((prev,curr)=>Math.abs(curr-parseFloat(feriado||0))<Math.abs(prev-parseFloat(feriado||0))?curr:prev, 0);
   document.getElementById('ea-id').value    = id;
   document.getElementById('ea-emp').value   = emp;
   document.getElementById('ea-fecha').value = fecha;
@@ -1864,7 +1859,7 @@ function abrirEditAsist(id, fecha, emp, jornales, trans, hextra, feriado){
   document.getElementById('ea-jorn').value   = jornales;
   document.getElementById('ea-trans').value  = trans;
   document.getElementById('ea-hextra').value = hextra||'';
-  document.getElementById('ea-fer').value    = feriado;
+  document.getElementById('ea-fer').value    = ferVal;
   document.getElementById('modal-edit-asist').style.display='flex';
 }
 
@@ -1884,14 +1879,17 @@ async function guardarEditAsist(){
   try{
     const empData = await sbGet('empleados',`nombre=eq.${encodeURIComponent(emp)}&select=jornal,transporte,hextra,feriado`);
     const t = empData[0]||{jornal:0,transporte:0,hextra:0,feriado:0};
-    const jornal_pesos    = Math.round(jornales*(t.jornal||0));
-    const transporte_pesos= Math.round(trans&&(jornales>0)?t.transporte||0:0);
-    const hextra_pesos    = Math.round(hextra*(t.hextra||0));
-    const feriado_pesos   = Math.round(feriado?(t.feriado||0):0);
-    const total           = jornal_pesos+transporte_pesos+hextra_pesos+feriado_pesos;
-
-    const updates = {jornales,transporte:trans,h_extra:hextra,feriado,
-      jornal_pesos,transporte_pesos,hextra_pesos,feriado_pesos,total};
+    const jornal_pesos     = Math.round(jornales*(parseFloat(t.jornal)||0));
+    const transporte_pesos = Math.round(trans>0&&jornales>0?parseFloat(t.transporte)||0:0);
+    const hextra_pesos     = Math.round(hextra*(parseFloat(t.hextra)||0));
+    const feriado_pesos    = Math.round(parseFloat(feriado||0)*(parseFloat(t.feriado)||0));
+    const total            = jornal_pesos+transporte_pesos+hextra_pesos+feriado_pesos;
+    const updates = {
+      jornales, transporte:parseFloat(trans)||0,
+      h_extra:parseFloat(hextra)||0,
+      feriado:parseFloat(feriado)||0,
+      jornal_pesos,transporte_pesos,hextra_pesos,feriado_pesos,total
+    };
 
     await sbPatch('asistencia',id,updates);
     closeEditModal();
@@ -2722,24 +2720,27 @@ async function cargarPagos(){
       `obra=eq.${encodeURIComponent(obra)}&activo=eq.ACTIVO&select=id,nombre,cuenta_macro,tarjeta_macro,jornal,transporte,hextra,feriado&order=nombre`);
     if(!emps.length){alert(`Sin empleados activos en ${obra}.`);btn.textContent='→ Cargar empleados';btn.disabled=false;return;}
 
-    // Get asistencia del período para calcular lo ganado
-    // Query by fecha only - then filter by empleado name to catch cross-obra records
+    // Query asistencia by employee names - captures cross-obra records
     const nombresIn = emps.map(e=>`"${e.nombre}"`).join(',');
     const asist = await sbGet('asistencia',
-      `fecha=gte.${desde}&fecha=lte.${hasta}&empleado=in.(${nombresIn})&select=empleado,total,obra`);
+      `fecha=gte.${desde}&fecha=lte.${hasta}&empleado=in.(${nombresIn})&select=empleado,total,obra,fecha,jornales`);
 
-    // Map totales por empleado (sin importar en qué obra trabajó ese día)
-    const totMap = {};
-    const obraMap = {};
+    // Map totales y detalle por empleado (todas las obras donde trabajó)
+    const totMap    = {};
+    const detMap    = {}; // {empleado: {obra: {dias, total}}}
     (Array.isArray(asist)?asist:[]).forEach(r=>{
-      totMap[r.empleado] = (totMap[r.empleado]||0) + (parseFloat(r.total)||0);
-      obraMap[r.empleado] = r.obra; // última obra registrada
+      const emp = r.empleado;
+      totMap[emp] = (totMap[emp]||0) + (parseFloat(r.total)||0);
+      if(!detMap[emp]) detMap[emp] = {};
+      if(!detMap[emp][r.obra]) detMap[emp][r.obra] = {dias:0,total:0};
+      detMap[emp][r.obra].dias   += parseFloat(r.jornales)||0;
+      detMap[emp][r.obra].total  += parseFloat(r.total)||0;
     });
 
     pvEmpleados = emps.map(e=>({
       ...e,
-      ganado: totMap[e.nombre] || 0,
-      obra_trabajada: obraMap[e.nombre] || obra,
+      ganado:   totMap[e.nombre] || 0,
+      detalle:  detMap[e.nombre] || {},
       quinc: 0,
       efec: 0,
       pagado: true,
@@ -2753,136 +2754,182 @@ async function cargarPagos(){
 }
 
 function renderPagos(){
-  const tbody = document.getElementById('pv-tbody');
-  tbody.innerHTML = '';
+  const list = document.getElementById('pv-cards-list');
+  list.innerHTML = '';
+  document.getElementById('pv-cards-label').textContent = pvEmpleados.length + ' empleados';
+
   pvEmpleados.forEach((emp, i)=>{
     const tieneTarjeta = emp.tarjeta_macro || emp.cuenta_macro;
-    const tr = document.createElement('tr');
-    tr.id = `pv-tr-${i}`;
-    tr.innerHTML = `
-      <td><input type="checkbox" checked id="pv-chk-${i}" style="accent-color:var(--gold);width:14px;height:14px;" onchange="pvToggle(${i},this)"/></td>
-      <td style="font-weight:500;font-size:12px;">${emp.nombre}</td>
-      <td style="font-size:10px;color:var(--text3);font-family:var(--mono);">
-        ${emp.cuenta_macro||'—'}
-        ${emp.obra_trabajada && emp.obra_trabajada!==emp.obra?`<div style="font-size:9px;color:var(--amber);">↳ trabajó en ${emp.obra_trabajada}</div>`:''}
-      </td>
-      <td style="text-align:center;">
-        ${tieneTarjeta
-          ? '<span class="badge badge-ok" style="font-size:9px;">✓ Macro</span>'
-          : '<span class="badge badge-err" style="font-size:9px;">Sin tarjeta</span>'}
-      </td>
-      <td style="text-align:right;font-family:var(--mono);font-size:11px;color:var(--text2);">${pesos(emp.ganado)}</td>
-      <td style="padding:4px 8px;">
-        <input type="number" id="pv-q-${i}" value="" placeholder="0"
-          style="width:100%;height:28px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--ice);font-family:var(--mono);font-size:12px;text-align:right;padding:0 8px;outline:none;"
-          oninput="pvCalc(${i})" ${!tieneTarjeta?'disabled title="Sin cuenta bancaria"':''}/>
-      </td>
-      <td style="padding:4px 8px;">
-        <input type="number" id="pv-e-${i}" value="" placeholder="auto"
-          style="width:100%;height:28px;background:rgba(232,160,32,.06);border:1px solid rgba(232,160,32,.2);border-radius:4px;color:var(--gold);font-family:var(--mono);font-size:12px;text-align:right;padding:0 8px;outline:none;"
-          oninput="this.dataset.autoset='manual';pvCalc(${i})"/>
-      </td>
-      <td class="mono" style="text-align:right;font-size:11px;font-weight:600;" id="pv-tot-${i}">$0</td>
-      <td style="text-align:center;">
-        <span class="badge badge-ok" id="pv-est-${i}" style="font-size:9px;">Pendiente</span>
-      </td>`;
-    tbody.appendChild(tr);
+    const initials = (emp.nombre||'?').split(',')[0].trim().substring(0,2).toUpperCase();
+    const card = document.createElement('div');
+    card.id = `pv-card-${i}`;
+    card.style.cssText = `background:var(--c1);border:1px solid var(--border);border-radius:16px;padding:16px;transition:all .15s;`;
+
+    card.innerHTML = `
+      <!-- Card header -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--navy);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0;">${initials}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${emp.nombre}</div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;">
+            ${emp.obra} · ${tieneTarjeta?'<span style="color:var(--ice);">◆ Macro '+emp.cuenta_macro+'</span>':'<span style="color:var(--text3);">Sin tarjeta</span>'}
+          </div>
+          ${Object.keys(emp.detalle||{}).length>1?`<div style="font-size:9px;color:var(--amber);margin-top:2px;">↳ ${Object.entries(emp.detalle).map(([o,d])=>o+': '+d.dias.toFixed(1)+'j').join(' · ')}</div>`:''}
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">GANADO</div>
+          <div style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--text2);">${pesos(emp.ganado)}</div>
+        </div>
+        <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
+          <input type="checkbox" id="pv-chk-${i}" checked onchange="pvToggle(${i},this)" style="width:18px;height:18px;accent-color:var(--gold);"/>
+          <span style="font-size:8px;font-family:var(--mono);color:var(--text3);">INCLUIR</span>
+        </label>
+      </div>
+
+      <!-- Montos -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <!-- Quincena banco -->
+        <div style="background:var(--c2);border:1px solid rgba(123,175,212,.2);border-radius:10px;padding:10px 12px;">
+          <div style="font-size:9px;color:var(--ice);font-family:var(--mono);letter-spacing:1px;margin-bottom:6px;">◆ BANCO</div>
+          <input type="number" id="pv-q-${i}" value="" placeholder="0"
+            style="width:100%;background:transparent;border:none;border-bottom:1px solid rgba(123,175,212,.3);color:var(--ice);font-family:var(--mono);font-size:18px;font-weight:700;padding:2px 0;outline:none;text-align:center;"
+            oninput="pvCalc(${i})" ${!tieneTarjeta?'disabled style="opacity:.4;cursor:not-allowed;" title='Sin cuenta bancaria'"':''}/>
+          <div style="font-size:9px;color:var(--text3);text-align:center;margin-top:4px;">quincena declarada</div>
+        </div>
+        <!-- Efectivo -->
+        <div style="background:var(--c2);border:1px solid rgba(232,160,32,.2);border-radius:10px;padding:10px 12px;">
+          <div style="font-size:9px;color:var(--gold);font-family:var(--mono);letter-spacing:1px;margin-bottom:6px;">$ EFECTIVO</div>
+          <input type="number" id="pv-e-${i}" value="" placeholder="auto"
+            style="width:100%;background:transparent;border:none;border-bottom:1px solid rgba(232,160,32,.3);color:var(--gold);font-family:var(--mono);font-size:18px;font-weight:700;padding:2px 0;outline:none;text-align:center;"
+            oninput="this.dataset.autoset='manual';pvCalc(${i})"/>
+          <div style="font-size:9px;color:var(--text3);text-align:center;margin-top:4px;">sobre del viernes</div>
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div style="background:var(--c0);border:1px solid var(--border);border-radius:10px;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">TOTAL A PAGAR</div>
+        <div id="pv-tot-${i}" style="font-size:20px;font-weight:700;font-family:var(--mono);color:var(--green);">$0</div>
+        <span class="badge" id="pv-est-${i}" style="font-size:9px;">Pendiente</span>
+      </div>`;
+
+    list.appendChild(card);
   });
+
+  document.getElementById('pv-cards').style.display = 'block';
+  document.getElementById('pv-empty').style.display = 'none';
   pvUpdateTotals();
+}
+
+function pvMarcarTodos(val){
+  pvEmpleados.forEach((_,i)=>{
+    const chk = document.getElementById(`pv-chk-${i}`);
+    if(chk){ chk.checked = val; pvToggle(i,chk); }
+  });
 }
 
 function pvToggle(i, cb){
   pvEmpleados[i].pagado = cb.checked;
-  document.getElementById(`pv-tr-${i}`).style.opacity = cb.checked ? '1' : '0.4';
+  const card = document.getElementById(`pv-card-${i}`);
+  if(card) card.style.opacity = cb.checked ? '1' : '0.45';
   pvCalc(i);
 }
 
 function pvCalc(i){
   const q = parseFloat(document.getElementById(`pv-q-${i}`)?.value)||0;
-  // Auto-calculate efectivo = ganado - quincena (if ganado > 0)
   const ganado = pvEmpleados[i].ganado||0;
-  let e = parseFloat(document.getElementById(`pv-e-${i}`)?.value);
-  if(isNaN(e) && ganado > 0 && q > 0){
-    // Auto-suggest efectivo
-    e = Math.max(0, ganado - q);
-    const eEl = document.getElementById(`pv-e-${i}`);
-    if(eEl && eEl.dataset.autoset !== 'manual') eEl.value = e || '';
+  const eEl = document.getElementById(`pv-e-${i}`);
+  // Auto-suggest efectivo
+  if(eEl && eEl.dataset.autoset !== 'manual' && q > 0 && ganado > 0){
+    const sugerido = Math.max(0, ganado - q);
+    eEl.value = sugerido > 0 ? sugerido : '';
   }
-  e = parseFloat(document.getElementById(`pv-e-${i}`)?.value)||0;
+  const e = parseFloat(document.getElementById(`pv-e-${i}`)?.value)||0;
   pvEmpleados[i].quinc = q;
   pvEmpleados[i].efec  = e;
   const tot = q + e;
+
   const totEl = document.getElementById(`pv-tot-${i}`);
-  if(totEl){
-    totEl.textContent = pesos(tot);
-    // Highlight if efectivo > 0
-    totEl.style.color = e > 0 ? 'var(--gold2)' : 'var(--gold)';
-  }
+  if(totEl) totEl.textContent = pesos(tot);
+
   const estEl = document.getElementById(`pv-est-${i}`);
   if(estEl){
-    if(!pvEmpleados[i].pagado){estEl.textContent='Salteado';estEl.className='badge badge-err';return;}
-    if(tot === 0){estEl.textContent='Pendiente';estEl.className='badge badge-warn';return;}
-    if(q > 0 && e > 0){estEl.textContent='Banco+Efec.';estEl.className='badge badge-info';}
-    else if(q > 0){estEl.textContent='Solo banco';estEl.className='badge badge-ok';}
-    else{estEl.textContent='Solo efec.';estEl.className='badge badge-warn';}
+    if(!pvEmpleados[i].pagado){ estEl.textContent='Salteado'; estEl.style.cssText='background:var(--red-bg);color:var(--red);padding:3px 9px;border-radius:20px;font-size:9px;font-weight:600;font-family:var(--mono);'; return; }
+    if(tot===0){ estEl.textContent='Pendiente'; estEl.style.cssText='background:rgba(244,162,97,.15);color:var(--amber);padding:3px 9px;border-radius:20px;font-size:9px;font-weight:600;font-family:var(--mono);'; return; }
+    if(q>0&&e>0){ estEl.textContent='Banco+Efec.'; estEl.style.cssText='background:var(--blue-bg);color:var(--ice);padding:3px 9px;border-radius:20px;font-size:9px;font-weight:600;font-family:var(--mono);'; }
+    else if(q>0){ estEl.textContent='Solo banco'; estEl.style.cssText='background:var(--green-bg);color:var(--green);padding:3px 9px;border-radius:20px;font-size:9px;font-weight:600;font-family:var(--mono);'; }
+    else{ estEl.textContent='Solo efec.'; estEl.style.cssText='background:rgba(232,160,32,.15);color:var(--gold);padding:3px 9px;border-radius:20px;font-size:9px;font-weight:600;font-family:var(--mono);'; }
   }
   pvUpdateTotals();
 }
 
 function pvUpdateTotals(){
-  const tq = pvEmpleados.reduce((s,e)=>s+e.quinc,0);
-  const te = pvEmpleados.reduce((s,e)=>s+e.efec,0);
-  const tg = pvEmpleados.reduce((s,e)=>s+e.ganado,0);
-  document.getElementById('pv-total-quinc').textContent = pesos(tq);
-  document.getElementById('pv-total-efec').textContent  = pesos(te);
-  document.getElementById('pv-total-gen').textContent   = pesos(tq+te);
-  // Efectivo alert
-  const diff = tg - (tq+te);
-  const genEl = document.getElementById('pv-total-gen');
-  if(genEl && Math.abs(diff)>100){
-    genEl.title = `Ganado total: ${pesos(tg)} · Diferencia: ${pesos(diff)}`;
-    genEl.style.color = diff > 0 ? 'var(--amber)' : 'var(--green)';
-  }
-}
+  const activos = pvEmpleados.filter(e=>e.pagado);
+  const tq = activos.reduce((s,e)=>s+e.quinc,0);
+  const te = activos.reduce((s,e)=>s+e.efec,0);
+  const tg = activos.reduce((s,e)=>s+e.ganado,0);
 
-async function guardarPagos(){
-  const desde = document.getElementById('pv-desde').value;
-  const hasta = document.getElementById('pv-hasta').value;
-  const obra  = document.getElementById('pv-obra').value;
-  const rows  = pvEmpleados
-    .filter(e => e.pagado && (e.quinc > 0 || e.efec > 0))
-    .map(e=>({
-      fecha_viernes: hasta,
-      periodo_desde: desde,
-      periodo_hasta: hasta,
-      obra,
-      empleado:     e.nombre,
-      cuenta_macro: e.cuenta_macro || null,
-      tiene_tarjeta: !!(e.tarjeta_macro || e.cuenta_macro),
-      monto_ganado: e.ganado,
-      quincena_banco: e.quinc || 0,
-      complemento_efectivo: e.efec || 0,
-      total_pagado: (e.quinc||0) + (e.efec||0),
-    }));
-  if(!rows.length){setStatus('pv-st','warn','Nada para guardar. Ingresá montos primero.');return;}
-  const btn = document.querySelector('#panel-pagos .btn-gold');
-  btn.textContent='Guardando...'; btn.disabled=true;
-  try{
-    await sbPost('pagos_semanales', rows);
-    setStatus('pv-st','ok', rows.length+' pagos registrados.');
-    resetPagos();
-  }catch(e){setStatus('pv-st','err',e.message);}
-  btn.textContent='Guardar pagos'; btn.disabled=false;
+  // Per-obra breakdown
+  const obraQ={}, obraE={}, obraG={};
+  activos.forEach(e=>{
+    const o=e.obra||'—';
+    obraQ[o]=(obraQ[o]||0)+e.quinc;
+    obraE[o]=(obraE[o]||0)+e.efec;
+    obraG[o]=(obraG[o]||0)+e.ganado;
+  });
+  const obras=[...new Set([...Object.keys(obraQ),...Object.keys(obraE)])].filter(o=>obraG[o]);
+
+  const porObraEl = document.getElementById('pv-por-obra');
+  if(porObraEl && obras.length){
+    porObraEl.style.display='block';
+    porObraEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin-bottom:10px;">
+        ${obras.map(o=>`
+          <div style="background:var(--c1);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
+            <div style="font-size:11px;font-weight:700;color:var(--text);font-family:var(--mono);margin-bottom:8px;">📍 ${o}</div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+              <span style="color:var(--text3);">Ganado</span>
+              <span style="font-family:var(--mono);color:var(--text2);">${pesos(obraG[o]||0)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+              <span style="color:var(--ice);">◆ Banco</span>
+              <span style="font-family:var(--mono);color:var(--ice);font-weight:600;">${pesos(obraQ[o]||0)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;">
+              <span style="color:var(--gold);">$ Efectivo</span>
+              <span style="font-family:var(--mono);color:var(--gold);font-weight:600;">${pesos(obraE[o]||0)}</span>
+            </div>
+            <div style="border-top:1px solid var(--border);padding-top:6px;display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--text3);">Total</span>
+              <span style="font-family:var(--mono);color:var(--green);font-weight:700;">${pesos((obraQ[o]||0)+(obraE[o]||0))}</span>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="background:var(--c1);border:1px solid rgba(232,160,32,.3);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:180px;">
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:1px;">TOTAL BANCO</div>
+          <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--ice);">${pesos(tq)}</div>
+        </div>
+        <div style="flex:1;min-width:180px;">
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:1px;">EFECTIVO A RETIRAR</div>
+          <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--gold);">${pesos(te)}</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:2px;">preparar para los sobres del viernes</div>
+        </div>
+        <div style="flex:1;min-width:180px;">
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:1px;">TOTAL GENERAL</div>
+          <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green);">${pesos(tq+te)}</div>
+          <div style="font-size:9px;color:${Math.abs(tg-(tq+te))>100?'var(--amber)':'var(--text3)'};margin-top:2px;">${Math.abs(tg-(tq+te))>100?'⚠ Ganado: '+pesos(tg):'✓ Cuadra con lo ganado'}</div>
+        </div>
+      </div>`;
+  }
 }
 
 function resetPagos(){
   pvEmpleados=[];
-  document.getElementById('pv-tbody').innerHTML='';
-  document.getElementById('pv-main').style.display='none';
+  document.getElementById('pv-cards-list').innerHTML='';
+  document.getElementById('pv-cards').style.display='none';
   document.getElementById('pv-empty').style.display='block';
-  document.getElementById('pv-total-quinc').textContent='$0';
-  document.getElementById('pv-total-efec').textContent='$0';
-  document.getElementById('pv-total-gen').textContent='$0';
+  document.getElementById('pv-por-obra').style.display='none';
 }
 
 async function consultarPagos(){
