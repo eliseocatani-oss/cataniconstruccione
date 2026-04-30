@@ -2720,10 +2720,14 @@ async function cargarPagos(){
       `obra=eq.${encodeURIComponent(obra)}&activo=eq.ACTIVO&select=id,nombre,cuenta_macro,tarjeta_macro,jornal,transporte,hextra,feriado&order=nombre`);
     if(!emps.length){alert(`Sin empleados activos en ${obra}.`);btn.textContent='→ Cargar empleados';btn.disabled=false;return;}
 
-    // Query asistencia by employee names - captures cross-obra records
-    const nombresIn = emps.map(e=>`"${e.nombre}"`).join(',');
-    const asist = await sbGet('asistencia',
-      `fecha=gte.${desde}&fecha=lte.${hasta}&empleado=in.(${nombresIn})&select=empleado,total,obra,fecha,jornales`);
+    // Query asistencia for the period - filter by empleado client-side
+    // Using date range only to avoid issues with special chars in names
+    let asistQs = `fecha=gte.${desde}&fecha=lte.${hasta}&select=empleado,total,obra,fecha,jornales&order=fecha`;
+    if(obra) asistQs += `&obra=eq.${encodeURIComponent(obra)}`;
+    const asistAll = await sbGet('asistencia', asistQs);
+    // Also get cross-obra records for these employees
+    const empNombres = new Set(emps.map(e=>e.nombre));
+    const asist = (Array.isArray(asistAll)?asistAll:[]).filter(r=>empNombres.has(r.empleado));
 
     // Map totales y detalle por empleado (todas las obras donde trabajó)
     const totMap    = {};
