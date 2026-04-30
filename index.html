@@ -2793,7 +2793,7 @@ function renderPagos(){
           <div style="font-size:9px;color:var(--ice);font-family:var(--mono);letter-spacing:1px;margin-bottom:6px;">◆ BANCO</div>
           <input type="number" id="pv-q-${i}" value="" placeholder="0"
             style="width:100%;background:transparent;border:none;border-bottom:1px solid rgba(123,175,212,.3);color:var(--ice);font-family:var(--mono);font-size:18px;font-weight:700;padding:2px 0;outline:none;text-align:center;"
-            oninput="pvCalc(${i})" ${!tieneTarjeta?'disabled style="opacity:.4;cursor:not-allowed;" title='Sin cuenta bancaria'"':''}/>
+            oninput="pvCalc(${i})" ${!tieneTarjeta?'disabled':''}/>
           <div style="font-size:9px;color:var(--text3);text-align:center;margin-top:4px;">quincena declarada</div>
         </div>
         <!-- Efectivo -->
