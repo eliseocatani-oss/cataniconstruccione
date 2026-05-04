@@ -1006,7 +1006,7 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
 <div id="panel-asist-contador" class="panel">
   <div class="topbar">
     <div class="topbar-inner">
-      <div><h1>Asistencia para contador</h1><p>// horas por día · formato ARCA · descargable</p></div>
+      <div><h1>Asistencia para contador</h1><p>// todas las obras · horas por día · descargable</p></div>
       <div class="breadcrumb">CATANI / <span>ASIST. CONTADOR</span></div>
     </div>
   </div>
@@ -1016,12 +1016,6 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
       <div class="row">
         <div class="f" style="max-width:155px;"><label>Desde</label><input type="date" id="ac-desde"/></div>
         <div class="f" style="max-width:155px;"><label>Hasta</label><input type="date" id="ac-hasta"/></div>
-        <div class="f" style="max-width:155px;"><label>Obra</label>
-          <select id="ac-obra">
-            <option value="">— elegir —</option>
-            <option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option><option>FUNES</option><option>PIÑERO</option>
-          </select>
-        </div>
         <div class="f" style="max-width:230px;"><label>Título quincena</label>
           <input type="text" id="ac-titulo" placeholder="ej: 2º QUINCENA DE ABRIL 26"/>
         </div>
@@ -1030,19 +1024,34 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
         </div>
       </div>
       <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">
-        Las horas vienen de tu asistencia real. Ajustá lo que necesites antes de descargar.
+        Carga todos los empleados que tuvieron asistencia en el período, de todas las obras. Los ausentes aparecen con 0.
       </div>
     </div>
 
     <div id="ac-main" style="display:none;">
-      <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);">
-          <div class="card-title" style="margin:0;">Horas por día</div>
-          <div style="display:flex;gap:12px;font-size:10px;font-family:var(--mono);color:var(--text3);">
-            <span>Total hs declaradas: <span id="ac-total-hs" style="color:var(--gold);font-weight:600;">0</span></span>
-            <span>Total hs reales: <span id="ac-total-real" style="color:var(--ice);">0</span></span>
+      <!-- Toolbar -->
+      <div class="card" style="padding:10px 14px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);font-weight:600;">COMPLETAR VACÍOS:</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-ghost btn-sm" onclick="completarTodosHoras(9)">9 hs (lun-vie)</button>
+            <button class="btn btn-ghost btn-sm" onclick="completarTodosHoras(5)">5 hs (sáb)</button>
+            <button class="btn btn-ghost btn-sm" onclick="completarTodosHoras(8)">8 hs</button>
+            <button class="btn btn-ghost btn-sm" onclick="completarTodosHoras(0)">Limpiar todos</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+            <input type="number" id="ac-hs-custom" placeholder="hs" min="0" max="24"
+              style="width:60px;height:28px;background:var(--c2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;text-align:center;padding:0;outline:none;"/>
+            <button class="btn btn-ghost btn-sm" onclick="completarTodosHoras(parseFloat(document.getElementById('ac-hs-custom').value)||0)">→ Aplicar</button>
+          </div>
+          <div style="display:flex;gap:12px;font-size:10px;font-family:var(--mono);color:var(--text3);margin-left:8px;">
+            <span>Hs declaradas: <span id="ac-total-hs" style="color:var(--gold);font-weight:600;">0</span></span>
+            <span>Hs reales: <span id="ac-total-real" style="color:var(--ice);">0</span></span>
           </div>
         </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px;">
         <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
           <table class="tbl" id="ac-tabla" style="font-size:11px;min-width:600px;">
             <thead>
@@ -1060,192 +1069,7 @@ body{font-family:var(--sans);background:var(--c0);color:var(--text);font-size:13
       </div>
     </div>
 
-    <div id="ac-empty" class="empty"><div class="empty-icon">⬡</div><p>seleccioná período y obra para cargar</p></div>
-  </div>
-</div>
-
-<!-- ══ ADELANTOS ══ -->
-<div id="panel-adelantos" class="panel">
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div><h1>Adelantos</h1><p>// registro de adelantos · descuento automático en sobre del viernes</p></div>
-      <div class="breadcrumb">CATANI / <span>ADELANTOS</span></div>
-    </div>
-  </div>
-  <div class="content">
-    <div class="card">
-      <div class="card-title">Registrar adelanto</div>
-      <div class="row">
-        <div class="f" style="max-width:155px;"><label>Fecha</label><input type="date" id="adv-fecha"/></div>
-        <div class="f" style="max-width:155px;"><label>Obra</label>
-          <select id="adv-obra" onchange="cargarEmpleadosAdelanto()">
-            <option value="">— elegir —</option>
-            <option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option><option>FUNES</option><option>PIÑERO</option>
-          </select>
-        </div>
-        <div class="f"><label>Empleado</label>
-          <select id="adv-emp"><option value="">— elegir obra primero —</option></select>
-        </div>
-        <div class="f" style="max-width:160px;"><label>Monto ($)</label>
-          <input type="number" id="adv-monto" placeholder="0.00"/>
-        </div>
-      </div>
-      <div class="row">
-        <div class="f"><label>Observación</label>
-          <input type="text" id="adv-obs" placeholder="motivo del adelanto"/>
-        </div>
-        <div class="f" style="max-width:160px;"><label>Forma de pago</label>
-          <select id="adv-forma">
-            <option>EFECTIVO</option><option>TRANSFERENCIA</option>
-          </select>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-gold" onclick="guardarAdelanto()">Registrar adelanto</button>
-        <div id="adv-st" class="st"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Adelantos pendientes de descuento</div>
-      <div class="row" style="margin-bottom:10px;">
-        <div class="f" style="max-width:155px;"><label>Obra</label>
-          <select id="adv-filtro-obra" onchange="consultarAdelantos()">
-            <option value="">Todas</option>
-            <option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option>
-          </select>
-        </div>
-        <div class="f" style="max-width:140px;justify-content:flex-end;"><label>&nbsp;</label>
-          <button class="btn btn-nav" onclick="consultarAdelantos()">Actualizar</button>
-        </div>
-      </div>
-      <div id="adv-resultado"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ VENCIMIENTOS ══ -->
-<div id="panel-vencimientos" class="panel">
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div><h1>Vencimientos</h1><p>// ART · seguros · IERIC · carnet · documentación</p></div>
-      <div class="breadcrumb">CATANI / <span>VENCIMIENTOS</span></div>
-    </div>
-  </div>
-  <div class="content">
-    <!-- Alertas activas -->
-    <div id="venc-alertas" style="margin-bottom:12px;"></div>
-
-    <!-- Nuevo vencimiento -->
-    <div class="card">
-      <div class="card-title">Nuevo vencimiento</div>
-      <div class="row">
-        <div class="f"><label>Tipo</label>
-          <select id="venc-tipo">
-            <option>ART</option><option>SEGURO DE VIDA</option><option>IERIC</option>
-            <option>CARNET DE CONDUCIR</option><option>LIBRETA SANITARIA</option>
-            <option>SEGURO OBRA</option><option>HABILITACIÓN MUNICIPAL</option>
-            <option>OTRO</option>
-          </select>
-        </div>
-        <div class="f"><label>Descripción</label>
-          <input type="text" id="venc-desc" placeholder="ej: ART EXPERTA — CAPUA"/>
-        </div>
-        <div class="f" style="max-width:155px;"><label>Obra / Empleado</label>
-          <input type="text" id="venc-ref" placeholder="CAPUA o nombre empleado"/>
-        </div>
-      </div>
-      <div class="row">
-        <div class="f" style="max-width:155px;"><label>Fecha vencimiento</label>
-          <input type="date" id="venc-fecha"/>
-        </div>
-        <div class="f" style="max-width:155px;"><label>Alertar con (días)</label>
-          <select id="venc-dias-alerta">
-            <option value="7">7 días antes</option>
-            <option value="15">15 días antes</option>
-            <option value="30" selected>30 días antes</option>
-            <option value="60">60 días antes</option>
-          </select>
-        </div>
-        <div class="f"><label>Observaciones</label>
-          <input type="text" id="venc-obs" placeholder="proveedor, número de póliza, etc."/>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-gold" onclick="guardarVencimiento()">Guardar</button>
-        <div id="venc-st" class="st"></div>
-      </div>
-    </div>
-
-    <!-- Calendario -->
-    <div class="card">
-      <div class="card-title">Calendario de vencimientos</div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-        <button class="btn btn-ghost btn-sm" onclick="calMes(-1)">← Anterior</button>
-        <div style="font-size:14px;font-weight:700;color:var(--text);font-family:var(--mono);" id="cal-titulo"></div>
-        <button class="btn btn-ghost btn-sm" onclick="calMes(1)">Siguiente →</button>
-        <button class="btn btn-nav btn-sm" onclick="calMes(0)" style="margin-left:auto;">Hoy</button>
-      </div>
-      <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px;"></div>
-      <div id="cal-leyenda" style="display:flex;gap:16px;font-size:10px;font-family:var(--mono);color:var(--text3);">
-        <span><span style="color:var(--red);">●</span> Vencido</span>
-        <span><span style="color:var(--amber);">●</span> Próximo a vencer</span>
-        <span><span style="color:var(--green);">●</span> Vigente</span>
-      </div>
-    </div>
-
-    <!-- Lista completa -->
-    <div class="card">
-      <div class="card-title">Todos los vencimientos</div>
-      <div id="venc-lista"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ PLANILLA IMPRIMIBLE ══ -->
-<div id="panel-planilla" class="panel">
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div><h1>Planilla de asistencia</h1><p>// para imprimir · firma manual · horario entrada/salida</p></div>
-      <div class="breadcrumb">CATANI / <span>PLANILLA</span></div>
-    </div>
-  </div>
-  <div class="content">
-    <div class="card">
-      <div class="card-title">Configurar planilla</div>
-      <div class="row">
-        <div class="f" style="max-width:155px;"><label>Obra</label>
-          <select id="pl-obra">
-            <option value="">— elegir —</option>
-            <option>CAPUA</option><option>SAN JUSTO</option><option>EPRECO</option><option>FUNES</option><option>PIÑERO</option>
-          </select>
-        </div>
-        <div class="f" style="max-width:155px;"><label>Fecha</label>
-          <input type="date" id="pl-fecha"/>
-        </div>
-        <div class="f" style="max-width:120px;"><label>Renglones extra</label>
-          <input type="number" id="pl-extra" value="5" min="0" max="20"/>
-        </div>
-        <div class="f" style="max-width:155px;"><label>Turno</label>
-          <select id="pl-turno">
-            <option value="COMPLETO">Completo</option>
-            <option value="MAÑANA">Mañana</option>
-            <option value="TARDE">Tarde</option>
-          </select>
-        </div>
-        <div class="f" style="justify-content:flex-end;max-width:170px;"><label>&nbsp;</label>
-          <button class="btn btn-gold" onclick="generarPlanilla()">↓ Generar PDF</button>
-        </div>
-      </div>
-      <div id="pl-st" class="st"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Vista previa</div>
-      <div id="pl-preview" style="font-size:12px;color:var(--text3);text-align:center;padding:20px;">
-        Elegí una obra y generá el PDF para ver la planilla.
-      </div>
-    </div>
+    <div id="ac-empty" class="empty"><div class="empty-icon">⬡</div><p>seleccioná período y cargá</p></div>
   </div>
 </div>
 
@@ -1704,7 +1528,7 @@ function renderAsist(){
   const tbody=document.getElementById('a-tbody');tbody.innerHTML='';
   empData.forEach((emp,i)=>{
     const tr=document.createElement('tr');tr.id=`tr-${i}`;tr.className='present';
-    const obraOpts=['CAPUA','SAN JUSTO','EPRECO','FUNES','PIÑERO'].map(o=>`<option value="${o}" ${o===emp.obra?'selected':''}>${o}</option>`).join('');
+    const obraOpts=['CAPUA','SAN JUSTO','EPRECO','FUNES','PIÑERO'].map(o=>`<option value="${o}" ${o===(obra||emp.obra)?'selected':''}>${o}</option>`).join('');
     tr.innerHTML=`<td><div class="ri">
       <input type="checkbox" checked onchange="toggleP(${i},this)"/>
       <div class="en">${emp.nombre}</div>
@@ -2460,45 +2284,85 @@ function isWeekend(dateStr){
 async function cargarAsistContador(){
   const desde = document.getElementById('ac-desde').value;
   const hasta = document.getElementById('ac-hasta').value;
-  const obra  = document.getElementById('ac-obra').value;
-  if(!desde || !hasta || !obra){alert('Completá período y obra.');return;}
+  if(!desde || !hasta){alert('Completá período.');return;}
   const btn = event.target; btn.textContent='Cargando...'; btn.disabled=true;
   try{
     acFechas = getDateRange(desde, hasta);
 
-    // Get empleados activos
-    const emps = await sbGet('empleados',
-      `obra=eq.${encodeURIComponent(obra)}&activo=eq.ACTIVO&select=id,nombre,legajo,categoria,alta&order=nombre`);
-    if(!emps.length){alert(`Sin empleados activos en ${obra}.`);btn.textContent='→ Cargar';btn.disabled=false;return;}
-
-    // Get asistencia real día por día
+    // Get ALL asistencia in period - all obras, including inactive employees
     const asist = await sbGet('asistencia',
-      `obra=eq.${encodeURIComponent(obra)}&fecha=gte.${desde}&fecha=lte.${hasta}&select=empleado,fecha,horas,jornales,feriado,h_extra`);
+      `fecha=gte.${desde}&fecha=lte.${hasta}&select=empleado,obra,fecha,horas,jornales,feriado&order=empleado,fecha`);
 
-    // Map: {empleado: {fecha: horas}}
-    const asistMap = {};
-    const ferMap   = {};
+    if(!asist.length){
+      alert('Sin asistencia cargada en ese período.');
+      btn.textContent='→ Cargar'; btn.disabled=false; return;
+    }
+
+    // Build map: {empleado: {fecha: horas, obra, feriado}}
+    const empMap = {}; // {nombre: {obra, horas_por_dia:{}, feriado_total}}
+    const ferMap = {};
     (Array.isArray(asist)?asist:[]).forEach(r=>{
-      if(!asistMap[r.empleado]) asistMap[r.empleado] = {};
-      asistMap[r.empleado][r.fecha] = parseFloat(r.horas)||0;
-      if(!ferMap[r.empleado]) ferMap[r.empleado] = 0;
-      ferMap[r.empleado] += parseFloat(r.feriado)||0;
+      const emp = r.empleado;
+      if(!empMap[emp]) empMap[emp] = {nombre:emp, obra:r.obra, horas_reales_por_dia:{}, horas_declarar_por_dia:{}, feriado_real:0};
+      const hs = parseFloat(r.horas)||0;
+      empMap[emp].horas_reales_por_dia[r.fecha] = hs;
+      empMap[emp].horas_declarar_por_dia[r.fecha] = hs;
+      empMap[emp].feriado_real += parseFloat(r.feriado)||0;
     });
 
-    acEmpleados = emps.map(e=>({
+    // Get employee details for legajo/categoria (including inactive)
+    const nombresUniq = Object.keys(empMap);
+    const empDetails = {};
+    try{
+      // Query all employees matching these names
+      const allEmps = await sbGet('empleados','select=nombre,legajo,categoria,alta&order=nombre');
+      (Array.isArray(allEmps)?allEmps:[]).forEach(e=>{
+        empDetails[e.nombre] = e;
+      });
+    }catch(e){}
+
+    // Merge details
+    acEmpleados = Object.values(empMap).map(e=>({
       ...e,
-      horas_reales_por_dia: asistMap[e.nombre] || {},
-      horas_declarar_por_dia: {...(asistMap[e.nombre]||{})}, // editable copy
-      feriado_real: ferMap[e.nombre]||0,
-      lluvia: 0, feriado: ferMap[e.nombre]||0,
-      accidente: 0, enfermedad: 0,
-    }));
+      legajo:    empDetails[e.nombre]?.legajo || '',
+      categoria: empDetails[e.nombre]?.categoria || '',
+      alta:      empDetails[e.nombre]?.alta || '',
+      lluvia: 0, feriado: e.feriado_real||0, accidente: 0, enfermedad: 0,
+    })).sort((a,b)=>a.nombre.localeCompare(b.nombre));
 
     renderAsistContador();
     document.getElementById('ac-main').style.display='block';
     document.getElementById('ac-empty').style.display='none';
   }catch(e){alert('Error: '+e.message);}
   btn.textContent='→ Cargar'; btn.disabled=false;
+}
+
+function completarTodosHoras(hs){
+  acEmpleados.forEach((emp, i)=>{
+    acFechas.forEach(f=>{
+      // Only fill weekdays with hs>0, or clear all if hs===0
+      const isWknd = isWeekend(f);
+      const inp = document.getElementById(`ac-hs-${i}-${f}`);
+      if(!inp) return;
+      if(hs === 0){
+        // Clear - but keep real asistencia values
+        const real = emp.horas_reales_por_dia[f] || 0;
+        inp.value = real > 0 ? real : '';
+        emp.horas_declarar_por_dia[f] = real;
+      } else {
+        // Only fill empty cells (days with no asistencia)
+        const current = parseFloat(inp.value)||0;
+        if(current === 0){
+          inp.value = hs;
+          emp.horas_declarar_por_dia[f] = hs;
+          inp.style.color = 'var(--amber)';
+          inp.style.borderColor = 'rgba(244,162,97,.4)';
+        }
+      }
+    });
+    acUpdateRowTotal(i);
+  });
+  acUpdateTotals();
 }
 
 function renderAsistContador(){
@@ -2510,9 +2374,8 @@ function renderAsistContador(){
   tbody.innerHTML = '';
 
   // Fixed headers
-  const fixedH = ['LEGAJO','APELLIDO Y NOMBRE'];
-  fixedH.forEach(h=>{
-    let th1 = document.createElement('th'); th1.textContent = h; th1.style.whiteSpace='nowrap';
+  ['OBRA','APELLIDO Y NOMBRE'].forEach(h=>{
+    let th1 = document.createElement('th'); th1.textContent = h; th1.style.whiteSpace='nowrap'; th1.style.textAlign='left';
     thead_dias.appendChild(th1);
     let th2 = document.createElement('th');
     thead_nums.appendChild(th2);
@@ -2524,7 +2387,7 @@ function renderAsistContador(){
     const wknd = isWeekend(f);
     const th1  = document.createElement('th');
     th1.textContent = abbr;
-    th1.style.cssText = `text-align:center;width:40px;${wknd?'color:var(--amber);':''}`;
+    th1.style.cssText = `text-align:center;width:42px;${wknd?'color:var(--amber);':''}`;
     thead_dias.appendChild(th1);
     const th2  = document.createElement('th');
     th2.textContent = new Date(f+'T12:00:00').getDate();
@@ -2533,98 +2396,90 @@ function renderAsistContador(){
   });
 
   // Summary headers
-  ['HS','Lluvia','Categ','Feriado','Accid','Enferm'].forEach(h=>{
+  ['HS','Lluvia','Feriado','Accid','Enferm'].forEach(h=>{
     let th1=document.createElement('th'); th1.textContent=h; th1.style.cssText='text-align:center;width:56px;';
     thead_dias.appendChild(th1);
     let th2=document.createElement('th');
     thead_nums.appendChild(th2);
   });
 
-  // Data rows
   let totDecl=0, totReal=0;
   acEmpleados.forEach((emp, i)=>{
     const tr = document.createElement('tr');
-    const bg = i%2===0 ? '' : 'background:rgba(255,255,255,.02);';
+    tr.style.cssText = i%2===0?'':'background:rgba(255,255,255,.02);';
 
-    // Legajo
+    // Obra
     let td = document.createElement('td');
-    td.textContent = emp.legajo||'—';
-    td.style.cssText = `font-family:var(--mono);font-size:10px;color:var(--text3);${bg}`;
+    td.textContent = emp.obra||'—';
+    td.style.cssText = 'font-size:10px;color:var(--gold);font-family:var(--mono);white-space:nowrap;padding:0 6px;';
     tr.appendChild(td);
 
     // Nombre
     td = document.createElement('td');
     td.textContent = emp.nombre;
-    td.style.cssText = `font-weight:500;white-space:nowrap;${bg}`;
+    td.style.cssText = 'font-weight:500;white-space:nowrap;padding:0 6px;min-width:180px;';
     tr.appendChild(td);
 
     // Day inputs
-    let totalDeclEmp = 0;
     acFechas.forEach(f=>{
       td = document.createElement('td');
-      td.style.cssText = `padding:2px 3px;${isWeekend(f)?'background:rgba(244,162,97,.06);':''}`;
+      td.style.cssText = `padding:2px 3px;${isWeekend(f)?'background:rgba(244,162,97,.04);':''}`;
       const realHs = emp.horas_reales_por_dia[f] || 0;
       const inp = document.createElement('input');
       inp.type = 'number';
       inp.min  = '0'; inp.max='24'; inp.step='1';
+      inp.id   = `ac-hs-${i}-${f}`;
       inp.value = realHs > 0 ? realHs : '';
-      inp.dataset.emp   = i;
-      inp.dataset.fecha = f;
-      inp.style.cssText = `width:38px;height:24px;background:${realHs>0?'rgba(232,160,32,.08)':'var(--c2)'};border:1px solid var(--border);border-radius:3px;color:${realHs>0?'var(--gold)':'var(--text3)'};font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;`;
+      inp.style.cssText = `width:40px;height:26px;background:${realHs>0?'rgba(232,160,32,.08)':'var(--c2)'};border:1px solid ${realHs>0?'rgba(232,160,32,.25)':'var(--border)'};border-radius:3px;color:${realHs>0?'var(--gold)':'var(--text3)'};font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;`;
       inp.oninput = function(){
-        const ei = parseInt(this.dataset.emp);
-        const fe = this.dataset.fecha;
-        const v  = parseFloat(this.value)||0;
-        acEmpleados[ei].horas_declarar_por_dia[fe] = v;
+        const v = parseFloat(this.value)||0;
+        acEmpleados[i].horas_declarar_por_dia[f] = v;
+        this.style.color = v>0 ? (acEmpleados[i].horas_reales_por_dia[f]>0 ? 'var(--gold)' : 'var(--amber)') : 'var(--text3)';
         acUpdateTotals();
-        acUpdateRowTotal(ei);
+        acUpdateRowTotal(i);
       };
       td.appendChild(inp);
       tr.appendChild(td);
-      if(realHs>0) totalDeclEmp += realHs;
+      if(realHs>0){ totReal+=realHs; totDecl+=realHs; }
     });
-
-    totReal += Object.values(emp.horas_reales_por_dia).reduce((s,v)=>s+v,0);
-    totDecl += Object.values(emp.horas_declarar_por_dia).reduce((s,v)=>s+v,0);
 
     // HS total
     td = document.createElement('td');
     td.id = `ac-hs-tot-${i}`;
-    td.textContent = Object.values(emp.horas_declarar_por_dia).reduce((s,v)=>s+v,0).toFixed(0);
-    td.style.cssText = `text-align:center;font-family:var(--mono);font-weight:700;color:var(--gold);`;
+    const totEmp = Object.values(emp.horas_declarar_por_dia).reduce((s,v)=>s+v,0);
+    td.textContent = totEmp.toFixed(0);
+    td.style.cssText = 'text-align:center;font-family:var(--mono);font-weight:700;color:var(--gold);';
     tr.appendChild(td);
 
     // Lluvia
     td=document.createElement('td');td.style.cssText='padding:2px 3px;';
     const ll=document.createElement('input');ll.type='number';ll.min='0';ll.value=emp.lluvia||'';
-    ll.style.cssText='width:48px;height:24px;background:var(--c2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;';
+    ll.id=`ac-ll-${i}`;
+    ll.style.cssText='width:46px;height:24px;background:var(--c2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;';
     ll.oninput=function(){acEmpleados[i].lluvia=parseFloat(this.value)||0;};
     td.appendChild(ll);tr.appendChild(td);
-
-    // Categ
-    td=document.createElement('td');
-    td.textContent=(emp.categoria||'').replace('1/2 OFICIAL','½ OF').substring(0,8);
-    td.style.cssText='text-align:center;font-size:10px;color:var(--text3);';
-    tr.appendChild(td);
 
     // Feriado
     td=document.createElement('td');td.style.cssText='padding:2px 3px;';
     const fe=document.createElement('input');fe.type='number';fe.min='0';fe.value=emp.feriado||'';
-    fe.style.cssText='width:48px;height:24px;background:var(--c2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;';
+    fe.id=`ac-fe-${i}`;
+    fe.style.cssText='width:46px;height:24px;background:var(--c2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;';
     fe.oninput=function(){acEmpleados[i].feriado=parseFloat(this.value)||0;};
     td.appendChild(fe);tr.appendChild(td);
 
     // Accidente
     td=document.createElement('td');td.style.cssText='padding:2px 3px;';
     const ac=document.createElement('input');ac.type='number';ac.min='0';ac.value=emp.accidente||'';
-    ac.style.cssText='width:48px;height:24px;background:var(--c2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;';
+    ac.id=`ac-ac-${i}`;
+    ac.style.cssText='width:46px;height:24px;background:var(--c2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;';
     ac.oninput=function(){acEmpleados[i].accidente=parseFloat(this.value)||0;};
     td.appendChild(ac);tr.appendChild(td);
 
     // Enfermedad
     td=document.createElement('td');td.style.cssText='padding:2px 3px;';
     const en=document.createElement('input');en.type='number';en.min='0';en.value=emp.enfermedad||'';
-    en.style.cssText='width:48px;height:24px;background:var(--c2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;';
+    en.id=`ac-en-${i}`;
+    en.style.cssText='width:46px;height:24px;background:var(--c2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;text-align:center;padding:0;outline:none;';
     en.oninput=function(){acEmpleados[i].enfermedad=parseFloat(this.value)||0;};
     td.appendChild(en);tr.appendChild(td);
 
@@ -2644,15 +2499,20 @@ function acUpdateRowTotal(i){
 function acUpdateTotals(){
   const totDecl = acEmpleados.reduce((s,e)=>s+Object.values(e.horas_declarar_por_dia).reduce((a,v)=>a+v,0),0);
   const totReal = acEmpleados.reduce((s,e)=>s+Object.values(e.horas_reales_por_dia).reduce((a,v)=>a+v,0),0);
-  document.getElementById('ac-total-hs').textContent   = totDecl.toFixed(0);
-  document.getElementById('ac-total-real').textContent = totReal.toFixed(0);
+  const d1=document.getElementById('ac-total-hs');
+  const d2=document.getElementById('ac-total-real');
+  if(d1)d1.textContent=totDecl.toFixed(0);
+  if(d2)d2.textContent=totReal.toFixed(0);
 }
 
 function resetAsistContador(){
   acEmpleados=[];acFechas=[];
-  document.getElementById('ac-tbody').innerHTML='';
-  document.getElementById('ac-thead-dias').innerHTML='';
-  document.getElementById('ac-thead-nums').innerHTML='';
+  const tbody=document.getElementById('ac-tbody');
+  const th1=document.getElementById('ac-thead-dias');
+  const th2=document.getElementById('ac-thead-nums');
+  if(tbody)tbody.innerHTML='';
+  if(th1)th1.innerHTML='';
+  if(th2)th2.innerHTML='';
   document.getElementById('ac-main').style.display='none';
   document.getElementById('ac-empty').style.display='block';
 }
@@ -2660,86 +2520,53 @@ function resetAsistContador(){
 async function descargarExcelContador(){
   const desde  = document.getElementById('ac-desde').value;
   const hasta  = document.getElementById('ac-hasta').value;
-  const obra   = document.getElementById('ac-obra').value;
   const titulo = document.getElementById('ac-titulo').value || `QUINCENA ${desde} al ${hasta}`;
   if(!acEmpleados.length){setStatus('ac-st','warn','Cargá los empleados primero.');return;}
-
   const btn = document.querySelector('#panel-asist-contador .btn-gold');
   btn.textContent='Generando...'; btn.disabled=true;
   setStatus('ac-st','','');
-
   try{
-    // Use SheetJS (xlsx) loaded via CDN to build the Excel in browser
     const XLSX = window.XLSX;
-    if(!XLSX){throw new Error('Librería Excel no disponible. Recargá la página.');}
-
-    const wb = XLSX.utils.book_new();
+    if(!XLSX){throw new Error('Librería Excel no disponible.');}
     const dias = ['DOM','LU','MA','MIE','JUE','VIE','SAB'];
-
-    // Build header rows
-    const headerRow1 = ['ALTA','LEGAJO','ORD','OBRA','N°','APELLIDO Y NOMBRE'];
-    const headerRow2 = ['','','','','',''];
+    const headerRow1 = ['OBRA','APELLIDO Y NOMBRE'];
+    const headerRow2 = ['',''];
     acFechas.forEach(f=>{
       headerRow1.push(dias[new Date(f+'T12:00:00').getDay()]);
       headerRow2.push(new Date(f+'T12:00:00').getDate());
     });
-    headerRow1.push(...['HS','lluvia','categ','feriado','accid','enferm']);
-    headerRow2.push(...['','','','','','']);
-
+    headerRow1.push(...['HS','Lluvia','Feriado','Accid','Enferm']);
+    headerRow2.push(...['','','','','']);
     const rows = [
-      [`CATANI CONSTRUCCIONES — ASISTENCIA ${titulo} — ${obra.toUpperCase()}`],
+      [`CATANI CONSTRUCCIONES — ASISTENCIA ${titulo}`],
       [],
-      ['ALTAS'],
       headerRow1,
       headerRow2,
     ];
-
-    acEmpleados.forEach((emp, i)=>{
-      const row = [
-        emp.alta||'',
-        emp.legajo||'',
-        i+1,
-        obra,
-        i+1,
-        emp.nombre,
-      ];
+    acEmpleados.forEach((emp,i)=>{
+      const row = [emp.obra||'', emp.nombre];
       let totalHs = 0;
       acFechas.forEach(f=>{
         const v = emp.horas_declarar_por_dia[f]||null;
         row.push(v);
         if(v) totalHs += v;
       });
-      row.push(
-        totalHs||null,
-        emp.lluvia||null,
-        emp.categoria||'',
-        emp.feriado||null,
-        emp.accidente||null,
-        emp.enfermedad||null,
-      );
+      row.push(totalHs||null, emp.lluvia||null, emp.feriado||null, emp.accidente||null, emp.enfermedad||null);
       rows.push(row);
     });
-
-    rows.push([]);
-    rows.push(['','','BAJAS','','LIQ FINAL']);
-
     const ws = XLSX.utils.aoa_to_sheet(rows);
-
-    // Column widths
-    const colWidths = [10,8,5,12,4,32,...acFechas.map(()=>4.5),6,6,8,8,8,8];
+    const colWidths = [12,32,...acFechas.map(()=>4.5),6,6,6,6,6];
     ws['!cols'] = colWidths.map(w=>({wch:w}));
-
+    const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'ASISTENCIA');
-
-    // Download
-    const filename = `Asistencia_${obra}_${desde}_${hasta}.xlsx`;
+    const filename = `Asistencia_${titulo.replace(/\s+/g,'_')}.xlsx`;
     XLSX.writeFile(wb, filename);
     setStatus('ac-st','ok','Excel descargado.');
   }catch(e){setStatus('ac-st','err','Error: '+e.message);}
   btn.textContent='↓ Descargar Excel'; btn.disabled=false;
 }
 
-// ── PAGOS VIERNES ──────────────────────────────────────────// ── PAGOS VIERNES ──────────────────────────────────────────
+// ── PAGOS VIERNES ──────────────────────────────────────────// ── PAGOS VIERNES ──────────────────────────────────────────// ── PAGOS VIERNES ──────────────────────────────────────────
 let pvEmpleados = [];
 
 async function cargarPagos(){
